@@ -3,224 +3,325 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Catálogo · RCRC Compuservice</title>
-<meta name="description" content="Explora todos nuestros productos: laptops, computadoras, componentes, monitores y accesorios.">
+<title>Admin · Romana Compuservice</title>
+<meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Archivo:wght@400;500;600;800;900&family=Archivo+Black&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/styles.css">
+<link rel="stylesheet" href="assets/admin.css">
 </head>
-<body>
+<body class="admin-body">
 
-<header>
-  <div class="header-inner">
-    <a href="index.html" class="logo">
-      <img src="assets/logo.png" alt="RCRC" class="logo-img" onerror="this.onerror=null; this.src='assets/logo-fallback.svg';">
-      
-      <div class="logo-text">Romana<br><small>COMPUSERVICE</small></div>
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" class="login-screen">
+  <div class="login-card">
+    <a href="index.html" class="logo" style="margin-bottom: 32px;">
+      <img src="assets/logo.png" alt="Romana" class="logo-img" onerror="this.onerror=null; this.src='assets/logo-fallback.svg';">
+      <div class="logo-text">Romana<br><small>ADMIN PANEL</small></div>
     </a>
 
-    <nav id="mainNav">
-      <ul>
-        <li><a href="catalogo.html" data-i18n="nav-products">Productos</a></li>
-        <li><a href="index.html#servicios" data-i18n="nav-services">Servicios</a></li>
-        <li><a href="index.html#resenas" data-i18n="nav-reviews">Reseñas</a></li>
-        <li><a href="index.html#contacto" data-i18n="nav-contact">Contacto</a></li>
-      </ul>
-    </nav>
+    <h1 class="login-title">Iniciar sesión</h1>
+    <p class="login-subtitle">Acceso restringido. Solo personal autorizado.</p>
 
-    <div class="header-actions">
-      <div class="lang-switch">
-        <span class="lang-switch-icon" title="Idioma / Language / Lingua"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>
-        <button class="active" data-lang="es">ES</button>
-        <button data-lang="en">EN</button>
-        <button data-lang="it">IT</button>
+    <form id="loginForm" class="login-form">
+      <div class="form-group">
+        <label for="loginEmail">Email</label>
+        <input type="email" id="loginEmail" required autocomplete="email" placeholder="tu@email.com">
       </div>
-      <button class="menu-toggle" id="menuToggle" aria-label="Menú">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      <div class="form-group">
+        <label for="loginPassword">Contraseña</label>
+        <input type="password" id="loginPassword" required autocomplete="current-password" placeholder="••••••••">
+      </div>
+      <div id="loginError" class="login-error" style="display: none;"></div>
+      <button type="submit" class="btn btn-primary btn-full" id="loginBtn">
+        <span>Entrar al panel</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>
+    </form>
+
+    <a href="index.html" class="login-back">← Volver al sitio</a>
+  </div>
+</div>
+
+<!-- ADMIN DASHBOARD (oculto hasta login) -->
+<div id="adminApp" class="admin-app" style="display: none;">
+
+  <!-- Top bar -->
+  <header class="admin-header">
+    <a href="index.html" class="logo">
+      <img src="assets/logo.png" alt="Romana" class="logo-img" onerror="this.onerror=null; this.src='assets/logo-fallback.svg';">
+      <div class="logo-text">Romana<br><small>ADMIN</small></div>
+    </a>
+
+    <div class="admin-header-actions">
+      <a href="index.html" target="_blank" class="btn btn-ghost btn-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        <span>Ver sitio</span>
+      </a>
+      <button id="logoutBtn" class="btn btn-ghost btn-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span>Salir</span>
       </button>
     </div>
-  </div>
-</header>
+  </header>
 
-<div class="catalog-page">
-  <div class="catalog-header">
-    <div class="breadcrumb">
-      <a href="index.html" data-i18n="cat-breadcrumb-home">Inicio</a>
-      <span> / </span>
-      <span data-i18n="cat-breadcrumb-current">Catálogo</span>
-    </div>
-    <h1 class="catalog-title">
-      <span data-i18n="cat-title-1">Catálogo</span> <em data-i18n="cat-title-2">completo</em>
-    </h1>
-    <p class="catalog-subtitle" data-i18n="cat-subtitle">
-      Explora nuestro inventario. Usa la búsqueda, los filtros laterales y el ordenamiento para encontrar exactamente lo que necesitas.
-    </p>
-  </div>
-
-  <div class="catalog-toolbar">
-    <button class="toolbar-toggle" id="filtersToggle">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
-      <span data-i18n="cat-filter-toggle">Filtros</span>
+  <!-- Tabs -->
+  <div class="admin-tabs">
+    <button class="admin-tab active" data-tab="products">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+      <span>Productos</span>
+      <span class="tab-count" id="productsCount">0</span>
     </button>
-
-    <div class="search-input-wrap">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" id="searchInput" class="search-input" placeholder="Buscar productos..." data-i18n-placeholder="cat-search-placeholder">
-    </div>
-
-    <select id="sortSelect" class="sort-select">
-      <option value="relevance" data-i18n="cat-sort-relevance">Relevancia</option>
-      <option value="price-asc" data-i18n="cat-sort-price-asc">Precio: menor a mayor</option>
-      <option value="price-desc" data-i18n="cat-sort-price-desc">Precio: mayor a menor</option>
-      <option value="name" data-i18n="cat-sort-name">Nombre A-Z</option>
-      <option value="newest" data-i18n="cat-sort-newest">Más nuevos primero</option>
-    </select>
+    <button class="admin-tab" data-tab="services">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+      <span>Servicios</span>
+      <span class="tab-count" id="servicesCount">0</span>
+    </button>
   </div>
 
-  <div class="catalog-layout">
-    <aside class="filters-sidebar" id="filtersSidebar">
-      <div class="filter-group">
-        <h4 data-i18n="cat-filter-category">Categoría</h4>
-        <div class="filter-options" id="filterCategory">
-          <!-- Generado por JS -->
+  <!-- TAB CONTENT: PRODUCTS -->
+  <section id="productsTab" class="admin-tab-content active">
+    <div class="admin-toolbar">
+      <h2>Gestionar productos</h2>
+      <button class="btn btn-primary" id="addProductBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span>Agregar producto</span>
+      </button>
+    </div>
+
+    <div id="productsLoading" class="loading-state">Cargando productos...</div>
+    <div id="productsList" class="admin-list" style="display: none;"></div>
+    <div id="productsEmpty" class="empty-state" style="display: none;">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+      <h3>No hay productos todavía</h3>
+      <p>Agrega tu primer producto para que aparezca en el catálogo.</p>
+    </div>
+  </section>
+
+  <!-- TAB CONTENT: SERVICES -->
+  <section id="servicesTab" class="admin-tab-content">
+    <div class="admin-toolbar">
+      <h2>Gestionar servicios</h2>
+      <button class="btn btn-primary" id="addServiceBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span>Agregar servicio</span>
+      </button>
+    </div>
+
+    <div id="servicesLoading" class="loading-state">Cargando servicios...</div>
+    <div id="servicesList" class="admin-list" style="display: none;"></div>
+    <div id="servicesEmpty" class="empty-state" style="display: none;">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+      <h3>No hay servicios todavía</h3>
+      <p>Agrega tu primer servicio.</p>
+    </div>
+  </section>
+</div>
+
+<!-- MODAL: PRODUCT FORM -->
+<div id="productModal" class="modal" role="dialog" aria-modal="true" style="display: none;">
+  <div class="modal-backdrop" data-close-modal></div>
+  <div class="modal-content">
+    <header class="modal-header">
+      <h3 id="productModalTitle">Agregar producto</h3>
+      <button class="modal-close" data-close-modal aria-label="Cerrar">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </header>
+
+    <form id="productForm" class="admin-form">
+      <input type="hidden" id="productEditingId">
+
+      <!-- Foto del producto -->
+      <div class="form-group">
+        <label>Foto del producto</label>
+        <div class="image-upload-wrap">
+          <div class="image-preview" id="imagePreview">
+            <span class="image-preview-placeholder">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <span>Sin foto</span>
+            </span>
+          </div>
+          <div class="image-upload-actions">
+            <input type="file" id="productImage" accept="image/*" style="display: none;">
+            <button type="button" class="btn btn-ghost btn-sm" id="uploadImageBtn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <span>Subir foto</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm btn-danger" id="removeImageBtn" style="display: none;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              <span>Quitar</span>
+            </button>
+            <p class="form-help">Máx 5 MB. JPG, PNG o WebP. Si no subes foto, se mostrará un ícono.</p>
+          </div>
         </div>
       </div>
 
-      <div class="filter-group">
-        <h4 data-i18n="cat-filter-brand">Marca</h4>
-        <div class="filter-options" id="filterBrand">
-          <!-- Generado por JS -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="productName">Nombre <span class="required">*</span></label>
+          <input type="text" id="productName" required placeholder="Laptop HP 250 G9">
+        </div>
+        <div class="form-group">
+          <label for="productSku">Código (SKU)</label>
+          <input type="text" id="productSku" placeholder="HP-250-001">
         </div>
       </div>
 
-      <div class="filter-group">
-        <h4 data-i18n="cat-filter-condition">Condición</h4>
-        <div class="filter-options" id="filterCondition">
-          <label class="filter-option">
-            <input type="checkbox" value="new" data-filter="condition">
-            <span data-i18n="cat-cond-new">Nuevo</span>
-          </label>
-          <label class="filter-option">
-            <input type="checkbox" value="used" data-filter="condition">
-            <span data-i18n="cat-cond-used">Usado</span>
-          </label>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="productBrand">Marca <span class="required">*</span></label>
+          <input type="text" id="productBrand" required list="brandsList" placeholder="HP">
+          <datalist id="brandsList">
+            <option value="HP">
+            <option value="Dell">
+            <option value="Lenovo">
+            <option value="Kingston">
+            <option value="Asus">
+            <option value="Acer">
+            <option value="Apple">
+            <option value="Logitech">
+            <option value="Genius">
+          </datalist>
+        </div>
+        <div class="form-group">
+          <label for="productCategory">Categoría <span class="required">*</span></label>
+          <select id="productCategory" required>
+            <option value="">Elige una...</option>
+            <option value="laptops" data-label="Laptops">Laptops</option>
+            <option value="desktops" data-label="Computadoras">Computadoras</option>
+            <option value="components" data-label="Componentes">Componentes</option>
+            <option value="monitors" data-label="Monitores">Monitores</option>
+            <option value="accessories" data-label="Accesorios">Accesorios</option>
+          </select>
         </div>
       </div>
 
-      <div class="filter-group">
-        <h4 data-i18n="cat-filter-availability">Disponibilidad</h4>
-        <div class="filter-options" id="filterAvailability">
-          <label class="filter-option">
-            <input type="checkbox" value="true" data-filter="availability" checked>
-            <span data-i18n="cat-avail-yes">Disponible</span>
-          </label>
-          <label class="filter-option">
-            <input type="checkbox" value="false" data-filter="availability">
-            <span data-i18n="cat-avail-no">Agotado</span>
-          </label>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="productCondition">Condición <span class="required">*</span></label>
+          <select id="productCondition" required>
+            <option value="new">Nuevo</option>
+            <option value="used">Usado</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="productPrice">Precio (RD$) <span class="required">*</span></label>
+          <input type="number" id="productPrice" required min="0" step="50" placeholder="0">
         </div>
       </div>
 
-      <div class="filter-group">
-        <h4 data-i18n="cat-filter-price">Rango de precio (RD$)</h4>
-        <div class="price-range">
-          <input type="number" id="priceMin" class="price-input" placeholder="Mín" data-i18n-placeholder="cat-filter-min" min="0">
-          <span style="color: var(--fg-3)">—</span>
-          <input type="number" id="priceMax" class="price-input" placeholder="Máx" data-i18n-placeholder="cat-filter-max" min="0">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="productWarranty">Garantía</label>
+          <input type="text" id="productWarranty" placeholder="6 meses, 30 días, etc.">
+        </div>
+        <div class="form-group">
+          <label for="productIconType">Ícono (si no hay foto)</label>
+          <select id="productIconType">
+            <option value="laptop">Laptop</option>
+            <option value="desktop">Desktop / Computadora</option>
+            <option value="ssd">SSD / Disco</option>
+            <option value="monitor">Monitor</option>
+            <option value="charger">Cargador / Cable</option>
+          </select>
         </div>
       </div>
 
-      <button class="filter-clear" id="clearFilters" data-i18n="cat-filter-clear">Limpiar filtros</button>
-    </aside>
-
-    <main class="catalog-results">
-      <div class="results-info">
-        <div class="results-count">
-          <span data-i18n="cat-results-showing">Mostrando</span>
-          <strong id="resultsCount">0</strong>
-          <span data-i18n="cat-results-of">de</span>
-          <strong id="totalCount">0</strong>
-          <span data-i18n="cat-results-products">productos</span>
-        </div>
+      <div class="form-group">
+        <label for="productDescription">Descripción corta <span class="required">*</span></label>
+        <textarea id="productDescription" required rows="2" placeholder="Una línea o dos. Aparece en las tarjetas del catálogo."></textarea>
       </div>
 
-      <div class="products-grid-catalog" id="productsGrid">
-        <!-- Generado por JS -->
+      <div class="form-group">
+        <label for="productLongDescription">Descripción larga</label>
+        <textarea id="productLongDescription" rows="4" placeholder="Aparece en la página de detalle del producto. Especificaciones, condición real, etc."></textarea>
       </div>
 
-      <div class="no-results" id="noResults" style="display: none;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <h3 data-i18n="cat-no-results-title">No encontramos productos</h3>
-        <p data-i18n="cat-no-results-desc">Intenta cambiar los filtros o limpiar la búsqueda.</p>
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="productAvailable" checked>
+          <span>Disponible en stock</span>
+        </label>
       </div>
-    </main>
+
+      <div id="productFormError" class="login-error" style="display: none;"></div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" data-close-modal>Cancelar</button>
+        <button type="submit" class="btn btn-primary" id="saveProductBtn">
+          <span>Guardar producto</span>
+        </button>
+      </div>
+    </form>
   </div>
 </div>
 
-<footer>
-  <div class="footer-grid">
-    <div class="footer-brand">
-      <a href="index.html" class="logo">
-        <img src="assets/logo.png" alt="RCRC" class="logo-img" onerror="this.onerror=null; this.src='assets/logo-fallback.svg';">
-        
-        <div class="logo-text">Romana<br><small>COMPUSERVICE & REPAIR</small></div>
-      </a>
-      <p data-i18n="foot-about">Especialistas en venta y reparación de equipos informáticos en La Romana, República Dominicana.</p>
-    </div>
-    <div class="footer-col">
-      <h5 data-i18n="foot-explore">Explorar</h5>
-      <ul>
-        <li><a href="catalogo.html" data-i18n="foot-prod">Catálogo</a></li>
-        <li><a href="index.html#servicios" data-i18n="foot-serv">Servicios</a></li>
-        <li><a href="index.html#resenas" data-i18n="foot-rev">Reseñas</a></li>
-        <li><a href="index.html#contacto" data-i18n="foot-cont">Contacto</a></li>
-      </ul>
-    </div>
-    <div class="footer-col">
-      <h5 data-i18n="foot-contact">Contacto</h5>
-      <ul>
-        <li><a href="https://wa.me/18297538736">WhatsApp</a></li>
-        <li><a href="tel:+18297538736">+1 (829) 753-8736</a></li>
-        <li><a href="mailto:romanacompuservice@gmail.com">Email</a></li>
-      </ul>
-    </div>
-    <div class="footer-col">
-      <h5 data-i18n="foot-social">Síguenos</h5>
-      <div class="social-links">
-        <a href="https://www.instagram.com/romanacompuservice/" target="_blank" rel="noopener" class="social-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
-        <a href="https://www.facebook.com/Romanacompuservicerd" target="_blank" rel="noopener" class="social-link"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z"/></svg></a>
-      </div>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <div>© 2026 RCRC Compuservice & Repair Center SRL · RD</div>
-    <div data-i18n="foot-rights">Todos los derechos reservados</div>
-  </div>
-</footer>
+<!-- MODAL: SERVICE FORM -->
+<div id="serviceModal" class="modal" role="dialog" aria-modal="true" style="display: none;">
+  <div class="modal-backdrop" data-close-modal></div>
+  <div class="modal-content modal-content-sm">
+    <header class="modal-header">
+      <h3 id="serviceModalTitle">Agregar servicio</h3>
+      <button class="modal-close" data-close-modal aria-label="Cerrar">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </header>
 
-<!-- Popup de WhatsApp -->
-<div class="whatsapp-popup" id="whatsappPopup" role="dialog" aria-live="polite">
-  <button class="whatsapp-popup-close" id="whatsappPopupClose" aria-label="Cerrar">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-  </button>
-  <div class="whatsapp-popup-avatar">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 6.32A7.85 7.85 0 0012.05 4a7.94 7.94 0 00-6.88 11.91L4 20l4.2-1.1a7.93 7.93 0 003.85.98h.01a7.93 7.93 0 007.92-7.93 7.86 7.86 0 00-2.38-5.63z"/></svg>
-  </div>
-  <div class="whatsapp-popup-content">
-    <div class="whatsapp-popup-title" data-i18n="wa-popup-title">¿Necesitas ayuda?</div>
-    <p class="whatsapp-popup-message" data-i18n="wa-popup-msg">Estamos en línea. Contáctanos por WhatsApp y te respondemos al instante.</p>
-    <a href="https://wa.me/18297538736" target="_blank" rel="noopener" class="whatsapp-popup-cta" data-i18n="wa-popup-cta">Chatear ahora</a>
+    <form id="serviceForm" class="admin-form">
+      <input type="hidden" id="serviceEditingId">
+
+      <div class="form-group">
+        <label for="serviceTitle">Nombre del servicio <span class="required">*</span></label>
+        <input type="text" id="serviceTitle" required placeholder="Cambio de pantalla">
+      </div>
+
+      <div class="form-group">
+        <label for="serviceDescription">Descripción <span class="required">*</span></label>
+        <textarea id="serviceDescription" required rows="3" placeholder="Reparación de pantallas dañadas en laptops..."></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="serviceOrder">Orden de aparición</label>
+          <input type="number" id="serviceOrder" min="0" step="1" value="0" placeholder="1, 2, 3...">
+          <p class="form-help">Menor = aparece primero</p>
+        </div>
+        <div class="form-group">
+          <label class="checkbox-label" style="margin-top: 28px;">
+            <input type="checkbox" id="serviceActive" checked>
+            <span>Activo (visible en el sitio)</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="serviceWhatsapp">Mensaje pre-armado de WhatsApp</label>
+        <input type="text" id="serviceWhatsapp" placeholder="Hola, quiero cotizar cambio de pantalla">
+        <p class="form-help">Mensaje que se manda al hacer clic en "Cotizar"</p>
+      </div>
+
+      <div id="serviceFormError" class="login-error" style="display: none;"></div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" data-close-modal>Cancelar</button>
+        <button type="submit" class="btn btn-primary" id="saveServiceBtn">
+          <span>Guardar servicio</span>
+        </button>
+      </div>
+    </form>
   </div>
 </div>
 
-<a href="https://wa.me/18297538736" target="_blank" rel="noopener" class="whatsapp-float">
-  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 6.32A7.85 7.85 0 0012.05 4a7.94 7.94 0 00-6.88 11.91L4 20l4.2-1.1a7.93 7.93 0 003.85.98h.01a7.93 7.93 0 007.92-7.93 7.86 7.86 0 00-2.38-5.63zM12.05 18.55a6.59 6.59 0 01-3.36-.92l-.24-.14-2.49.65.66-2.43-.16-.25a6.6 6.6 0 0110.21-8.16 6.55 6.55 0 011.93 4.66 6.6 6.6 0 01-6.55 6.59z"/></svg>
-</a>
+<!-- TOAST -->
+<div id="toast" class="toast" style="display: none;">
+  <span id="toastMessage"></span>
+</div>
 
-<script src="assets/translations.js"></script>
-<script src="assets/products.js"></script>
-<script src="assets/main.js"></script>
-<script src="assets/catalog.js"></script>
+<!-- Supabase JS desde CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/supabase.js"></script>
+<script src="assets/admin.js"></script>
 </body>
 </html>

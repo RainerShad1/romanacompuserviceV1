@@ -1,133 +1,117 @@
-================================================
-RCRC COMPUSERVICE - INSTRUCCIONES
-================================================
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Producto · RCRC Compuservice</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Archivo:wght@400;500;600;800;900&family=Archivo+Black&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
 
-📁 ESTRUCTURA DEL PROYECTO
-----------------------------------------
-rcrc/
-├── index.html           ← Página principal (home)
-├── catalogo.html        ← Catálogo completo con filtros
-├── producto.html        ← Vista detalle de producto
-└── assets/
-    ├── styles.css       ← Estilos compartidos
-    ├── translations.js  ← Traducciones ES / EN / IT
-    ├── products.js      ← Datos de productos (BD temporal)
-    ├── main.js          ← JS principal compartido
-    ├── catalog.js       ← Lógica del catálogo
-    ├── product.js       ← Lógica del detalle de producto
-    ├── logo.png         ← TU LOGO (reemplazar)
-    └── logo-fallback.svg ← Logo provisional
+<header>
+  <div class="header-inner">
+    <a href="index.html" class="logo">
+      <img src="assets/logo.png" alt="RCRC" class="logo-img" onerror="this.onerror=null; this.src='assets/logo-fallback.svg';">
+      
+      <div class="logo-text">Romana<br><small>COMPUSERVICE</small></div>
+    </a>
 
+    <nav id="mainNav">
+      <ul>
+        <li><a href="catalogo.html" data-i18n="nav-products">Productos</a></li>
+        <li><a href="index.html#servicios" data-i18n="nav-services">Servicios</a></li>
+        <li><a href="index.html#resenas" data-i18n="nav-reviews">Reseñas</a></li>
+        <li><a href="index.html#contacto" data-i18n="nav-contact">Contacto</a></li>
+      </ul>
+    </nav>
 
-🖼️ CÓMO CAMBIAR EL LOGO
-----------------------------------------
-1. Prepara tu logo:
-   - Formato PNG con fondo transparente (recomendado)
-   - Tamaño cuadrado: idealmente 256x256 hasta 1024x1024 px
-   - Si tienes SVG sería ideal, pero PNG funciona perfecto
+    <div class="header-actions">
+      <div class="lang-switch">
+        <span class="lang-switch-icon" title="Idioma / Language / Lingua"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>
+        <button class="active" data-lang="es">ES</button>
+        <button data-lang="en">EN</button>
+        <button data-lang="it">IT</button>
+      </div>
+      <button class="menu-toggle" id="menuToggle" aria-label="Menú">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
 
-2. Renómbralo a "logo.png"
+<div class="product-page">
+  <div id="productContent">
+    <!-- Generado por JS -->
+  </div>
+</div>
 
-3. Reemplaza el archivo "assets/logo.png" con tu logo
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="index.html" class="logo">
+        <img src="assets/logo.png" alt="RCRC" class="logo-img" onerror="this.onerror=null; this.src='assets/logo-fallback.svg';">
+        
+        <div class="logo-text">Romana<br><small>COMPUSERVICE & REPAIR</small></div>
+      </a>
+      <p data-i18n="foot-about">Especialistas en venta y reparación de equipos informáticos en La Romana, República Dominicana.</p>
+    </div>
+    <div class="footer-col">
+      <h5 data-i18n="foot-explore">Explorar</h5>
+      <ul>
+        <li><a href="catalogo.html" data-i18n="foot-prod">Catálogo</a></li>
+        <li><a href="index.html#servicios" data-i18n="foot-serv">Servicios</a></li>
+        <li><a href="index.html#resenas" data-i18n="foot-rev">Reseñas</a></li>
+        <li><a href="index.html#contacto" data-i18n="foot-cont">Contacto</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h5 data-i18n="foot-contact">Contacto</h5>
+      <ul>
+        <li><a href="https://wa.me/18297538736">WhatsApp</a></li>
+        <li><a href="tel:+18297538736">+1 (829) 753-8736</a></li>
+        <li><a href="mailto:romanacompuservice@gmail.com">Email</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h5 data-i18n="foot-social">Síguenos</h5>
+      <div class="social-links">
+        <a href="https://www.instagram.com/romanacompuservice/" target="_blank" rel="noopener" class="social-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+        <a href="https://www.facebook.com/Romanacompuservicerd" target="_blank" rel="noopener" class="social-link"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z"/></svg></a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div>© 2026 RCRC Compuservice & Repair Center SRL · RD</div>
+    <div data-i18n="foot-rights">Todos los derechos reservados</div>
+  </div>
+</footer>
 
-4. Listo. El logo cambia automáticamente en TODAS las páginas
-   (header de cada página y footer)
+<!-- Popup de WhatsApp -->
+<div class="whatsapp-popup" id="whatsappPopup" role="dialog" aria-live="polite">
+  <button class="whatsapp-popup-close" id="whatsappPopupClose" aria-label="Cerrar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  </button>
+  <div class="whatsapp-popup-avatar">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 6.32A7.85 7.85 0 0012.05 4a7.94 7.94 0 00-6.88 11.91L4 20l4.2-1.1a7.93 7.93 0 003.85.98h.01a7.93 7.93 0 007.92-7.93 7.86 7.86 0 00-2.38-5.63z"/></svg>
+  </div>
+  <div class="whatsapp-popup-content">
+    <div class="whatsapp-popup-title" data-i18n="wa-popup-title">¿Necesitas ayuda?</div>
+    <p class="whatsapp-popup-message" data-i18n="wa-popup-msg">Estamos en línea. Contáctanos por WhatsApp y te respondemos al instante.</p>
+    <a href="https://wa.me/18297538736" target="_blank" rel="noopener" class="whatsapp-popup-cta" data-i18n="wa-popup-cta">Chatear ahora</a>
+  </div>
+</div>
 
-⚠️ Si el archivo "logo.png" no existe o falla la carga, el sitio
-   muestra automáticamente el logo SVG provisional como respaldo,
-   así nunca se ve roto.
+<a href="https://wa.me/18297538736" target="_blank" rel="noopener" class="whatsapp-float">
+  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 6.32A7.85 7.85 0 0012.05 4a7.94 7.94 0 00-6.88 11.91L4 20l4.2-1.1a7.93 7.93 0 003.85.98h.01a7.93 7.93 0 007.92-7.93 7.86 7.86 0 00-2.38-5.63z"/></svg>
+</a>
 
-
-🚀 CÓMO PROBAR EL SITIO LOCALMENTE
-----------------------------------------
-Opción 1 - Doble clic:
-  Abre "index.html" haciendo doble clic. Funciona pero algunos
-  navegadores limitan ciertas funciones por seguridad.
-
-Opción 2 - Servidor local (recomendado):
-  Si tienes Python instalado, abre la terminal en esta carpeta y:
-
-    python -m http.server 8000
-
-  Luego abre en tu navegador: http://localhost:8000
-
-  Si tienes Node.js:
-    npx serve
-
-  Si usas VS Code: instala la extensión "Live Server" y
-  haz clic derecho en index.html → "Open with Live Server"
-
-
-✏️ CÓMO EDITAR PRODUCTOS (TEMPORAL)
-----------------------------------------
-Los productos están en "assets/products.js" como un array.
-
-Para AGREGAR un producto, copia un objeto existente y modifícalo:
-
-  {
-    id: 'mi-nuevo-producto',           // único, sin espacios
-    name: 'Nombre del producto',
-    brand: 'Dell',                      // Dell, HP, Lenovo, Kingston...
-    category: 'laptops',                // laptops, desktops, components,
-                                        //   monitors, accessories
-    categoryLabel: 'Laptops',           // Etiqueta visible
-    condition: 'new',                   // 'new' o 'used'
-    price: 25000,                       // número, sin RD$ ni comas
-    available: true,                    // true / false
-    description: 'Descripción corta',
-    longDescription: 'Descripción larga para el detalle',
-    warranty: '6 meses',
-    sku: 'CODIGO-001',                  // código único interno
-    iconType: 'laptop',                 // laptop, desktop, ssd,
-                                        //   monitor, charger
-    addedDate: '2026-01-15',            // YYYY-MM-DD
-  },
-
-Para QUITAR un producto, simplemente borra el bloque entero.
-
-Para MARCAR COMO AGOTADO, cambia: available: false
-
-⚠️ ESTO ES TEMPORAL. La próxima fase del proyecto es construir
-   el panel admin con login que permita gestionar todo esto
-   desde una interfaz web sin tocar código.
-
-
-🌐 IDIOMAS
-----------------------------------------
-El sitio soporta 3 idiomas: Español, Inglés, Italiano.
-
-- Los textos fijos (botones, menús, secciones) están traducidos.
-- Los productos y servicios solo aparecen en español por ahora
-  (modo "híbrido" para evitar trabajo de doble traducción).
-- El idioma elegido se guarda en el navegador del visitante.
-
-
-🎨 COLORES Y BORDES
-----------------------------------------
-Si quieres ajustar más los colores, edita las variables al inicio
-de "assets/styles.css":
-
-  --bg: #121214          ← fondo principal (negro suavizado)
-  --accent: #f0d949      ← amarillo (suavizado)
-  --r-md: 10px           ← radio de bordes medio
-
-Aumenta los radios para bordes aún más suaves, o disminúyelos
-si quieres más angular.
-
-
-🔜 PRÓXIMOS PASOS
-----------------------------------------
-1. Reemplazar el logo (cuando lo tengas listo)
-2. Subir el sitio a Vercel (te lo guío cuando estés listo)
-3. Construir el panel admin con login
-4. Conectar Supabase como base de datos real
-5. Migrar productos del archivo products.js a Supabase
-6. Configurar el truco de cron-job para evitar pausa
-
-
-📞 SOPORTE
-----------------------------------------
-Si algo no funciona, revisa:
-- Que la carpeta "assets/" esté completa
-- Que abras los archivos desde la carpeta correcta
-- Que tu navegador esté actualizado (Chrome, Firefox, Edge, Safari)
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/supabase.js"></script>
+<script src="assets/translations.js"></script>
+<script src="assets/main.js"></script>
+<script src="assets/product.js"></script>
+</body>
+</html>
