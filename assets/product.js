@@ -1,14 +1,19 @@
 // ================================================
-// RCRC COMPUSERVICE - PÁGINA DE PRODUCTO (DETALLE)
+// ROMANA COMPUSERVICE - PÁGINA DE PRODUCTO (DETALLE)
+// Carga desde Supabase
 // ================================================
 
 (function() {
   const container = document.getElementById('productContent');
 
-  // Obtener ID del producto desde URL
-  const params = new URLSearchParams(window.location.search);
-  const productId = params.get('id');
-  const product = productId ? getProductById(productId) : null;
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function renderLoading() {
+    container.innerHTML = `<div style="text-align: center; padding: 80px 20px; color: var(--fg-3); font-family: 'Space Mono', monospace;">Cargando producto...</div>`;
+  }
 
   function renderNotFound() {
     container.innerHTML = `
@@ -26,7 +31,7 @@
     setLang(getCurrentLang());
   }
 
-  function renderProduct() {
+  function renderProduct(product) {
     const isPending = product.isPending;
     const badgeClass = isPending ? 'badge-pending' : (product.condition === 'new' ? 'badge-new' : 'badge-used');
     const badgeKey = isPending ? 'badge-pending' : (product.condition === 'new' ? 'badge-new' : 'badge-used');
@@ -34,14 +39,16 @@
     const availClass = product.available ? 'available' : 'out-of-stock';
     const availKey = product.available ? 'cat-avail-yes' : 'cat-avail-no';
 
-    const icon = productIcons[product.iconType] || productIcons.laptop;
+    const imageContent = product.imageUrl
+      ? `<img src="${escapeHtml(product.imageUrl)}" alt="${escapeHtml(product.name)}" style="width: 100%; height: 100%; object-fit: cover;">`
+      : (productIcons[product.iconType] || productIcons.laptop);
 
     const whatsappLink = buildWhatsAppLink(product);
 
     container.innerHTML = `
       <div class="product-detail-grid">
         <div class="product-detail-image">
-          ${icon}
+          ${imageContent}
           <span class="product-badge ${badgeClass}" style="position: absolute; top: 20px; left: 20px;" data-i18n="${badgeKey}">${t(badgeKey)}</span>
           ${!isPending ? `<span class="product-availability ${availClass}" style="position: absolute; top: 20px; right: 20px;"><span class="dot"></span><span data-i18n="${availKey}">${t(availKey)}</span></span>` : ''}
         </div>
@@ -52,11 +59,11 @@
             <span> / </span>
             <a href="catalogo.html" data-i18n="prod-breadcrumb-cat">Catálogo</a>
             <span> / </span>
-            <span>${product.name}</span>
+            <span>${escapeHtml(product.name)}</span>
           </div>
 
-          <div class="product-detail-meta">${product.brand} · ${product.categoryLabel}</div>
-          <h1 class="product-detail-name">${product.name}</h1>
+          <div class="product-detail-meta">${escapeHtml(product.brand)} · ${escapeHtml(product.categoryLabel)}</div>
+          <h1 class="product-detail-name">${escapeHtml(product.name)}</h1>
 
           ${!isPending ? `
             <div class="product-detail-price">
@@ -70,33 +77,35 @@
             </div>
           `}
 
-          <p class="product-detail-desc">${product.longDescription || product.description}</p>
+          <p class="product-detail-desc">${escapeHtml(product.longDescription || product.description)}</p>
 
           <ul class="product-specs">
             <li>
               <span class="spec-label" data-i18n="prod-spec-brand">Marca</span>
-              <span class="spec-value">${product.brand}</span>
+              <span class="spec-value">${escapeHtml(product.brand)}</span>
             </li>
             <li>
               <span class="spec-label" data-i18n="prod-spec-category">Categoría</span>
-              <span class="spec-value">${product.categoryLabel}</span>
+              <span class="spec-value">${escapeHtml(product.categoryLabel)}</span>
             </li>
             <li>
               <span class="spec-label" data-i18n="prod-spec-condition">Condición</span>
               <span class="spec-value" data-i18n="${product.condition === 'new' ? 'cat-cond-new' : 'cat-cond-used'}">${product.condition === 'new' ? t('cat-cond-new') : t('cat-cond-used')}</span>
             </li>
+            ${product.warranty ? `
             <li>
               <span class="spec-label" data-i18n="prod-spec-warranty">Garantía</span>
-              <span class="spec-value">${product.warranty}</span>
-            </li>
+              <span class="spec-value">${escapeHtml(product.warranty)}</span>
+            </li>` : ''}
             <li>
               <span class="spec-label" data-i18n="prod-spec-availability">Disponibilidad</span>
               <span class="spec-value ${availClass}" data-i18n="${availKey}">${t(availKey)}</span>
             </li>
+            ${product.sku ? `
             <li>
               <span class="spec-label" data-i18n="prod-spec-sku">Código</span>
-              <span class="spec-value mono">${product.sku}</span>
-            </li>
+              <span class="spec-value mono">${escapeHtml(product.sku)}</span>
+            </li>` : ''}
           </ul>
 
           <div class="product-actions">
@@ -118,15 +127,28 @@
         </div>
       </div>
     `;
-    // Re-aplicar el idioma al contenido recién renderizado
     setLang(getCurrentLang());
   }
 
-  if (!product) {
-    renderNotFound();
-  } else {
-    renderProduct();
-    // Re-render al cambiar idioma
-    document.addEventListener('langChanged', renderProduct);
-  }
+  // Cargar desde Supabase
+  (async function init() {
+    const params = new URLSearchParams(window.location.search);
+    const productId = params.get('id');
+
+    if (!productId) {
+      renderNotFound();
+      return;
+    }
+
+    renderLoading();
+    const product = await fetchProductById(productId);
+
+    if (!product) {
+      renderNotFound();
+    } else {
+      renderProduct(product);
+      // Guardar referencia para re-render al cambiar idioma
+      document.addEventListener('langChanged', () => renderProduct(product));
+    }
+  })();
 })();

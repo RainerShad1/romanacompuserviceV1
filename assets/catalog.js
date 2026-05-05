@@ -1,16 +1,16 @@
 // ================================================
-// RCRC COMPUSERVICE - LÓGICA DEL CATÁLOGO
-// Búsqueda, filtros y ordenamiento
+// ROMANA COMPUSERVICE - LÓGICA DEL CATÁLOGO
+// Carga productos desde Supabase
 // ================================================
 
 (function() {
-  // Estado del catálogo
   const state = {
+    allProducts: [],
     search: '',
     categories: [],
     brands: [],
     conditions: [],
-    availability: [true],   // por defecto, mostrar solo disponibles
+    availability: [true],
     priceMin: null,
     priceMax: null,
     sort: 'relevance',
@@ -28,13 +28,11 @@
   const filtersToggle = document.getElementById('filtersToggle');
   const filtersSidebar = document.getElementById('filtersSidebar');
 
-  // === Generar filtros dinámicos basados en productos disponibles ===
   function buildDynamicFilters() {
-    // Categorías únicas
     const categories = {};
     const brands = {};
 
-    products.forEach(p => {
+    state.allProducts.forEach(p => {
       categories[p.category] = (categories[p.category] || 0) + 1;
       brands[p.brand] = (brands[p.brand] || 0) + 1;
     });
@@ -65,17 +63,14 @@
       </label>
     `).join('');
 
-    // Re-bind eventos a los nuevos checkboxes
     document.querySelectorAll('input[data-filter]').forEach(input => {
       input.addEventListener('change', handleFilterChange);
     });
   }
 
-  // === Filtrar y ordenar productos ===
   function getFilteredProducts() {
-    let filtered = [...products];
+    let filtered = [...state.allProducts];
 
-    // Búsqueda
     if (state.search) {
       const term = state.search.toLowerCase();
       filtered = filtered.filter(p =>
@@ -85,35 +80,13 @@
       );
     }
 
-    // Categorías
-    if (state.categories.length > 0) {
-      filtered = filtered.filter(p => state.categories.includes(p.category));
-    }
+    if (state.categories.length > 0) filtered = filtered.filter(p => state.categories.includes(p.category));
+    if (state.brands.length > 0) filtered = filtered.filter(p => state.brands.includes(p.brand));
+    if (state.conditions.length > 0) filtered = filtered.filter(p => state.conditions.includes(p.condition));
+    if (state.availability.length > 0) filtered = filtered.filter(p => state.availability.includes(p.available));
+    if (state.priceMin !== null) filtered = filtered.filter(p => p.price >= state.priceMin);
+    if (state.priceMax !== null) filtered = filtered.filter(p => p.price <= state.priceMax);
 
-    // Marcas
-    if (state.brands.length > 0) {
-      filtered = filtered.filter(p => state.brands.includes(p.brand));
-    }
-
-    // Condición
-    if (state.conditions.length > 0) {
-      filtered = filtered.filter(p => state.conditions.includes(p.condition));
-    }
-
-    // Disponibilidad
-    if (state.availability.length > 0) {
-      filtered = filtered.filter(p => state.availability.includes(p.available));
-    }
-
-    // Precio
-    if (state.priceMin !== null) {
-      filtered = filtered.filter(p => p.price >= state.priceMin);
-    }
-    if (state.priceMax !== null) {
-      filtered = filtered.filter(p => p.price <= state.priceMax);
-    }
-
-    // Ordenamiento
     switch (state.sort) {
       case 'price-asc':
         filtered.sort((a, b) => (a.price || 0) - (b.price || 0));
@@ -128,7 +101,6 @@
         filtered.sort((a, b) => new Date(b.addedDate) - new Date(a.addedDate));
         break;
       default:
-        // Relevancia: disponibles primero, no pendientes primero
         filtered.sort((a, b) => {
           if (a.isPending !== b.isPending) return a.isPending ? 1 : -1;
           if (a.available !== b.available) return a.available ? -1 : 1;
@@ -139,9 +111,12 @@
     return filtered;
   }
 
-  // === Renderizar tarjeta de producto ===
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
   function renderProductCard(product) {
-    const lang = getCurrentLang();
     const isPending = product.isPending;
     const badgeClass = isPending ? 'badge-pending' : (product.condition === 'new' ? 'badge-new' : 'badge-used');
     const badgeKey = isPending ? 'badge-pending' : (product.condition === 'new' ? 'badge-new' : 'badge-used');
@@ -154,9 +129,11 @@
       ? `<span style="color: var(--fg-3); font-size: 14px;">RD$ —<small style="display:block; color: var(--fg-3);">${t('pending')}</small></span>`
       : `${formatPrice(product.price)}<small>${product.condition === 'new' ? t('price-include') : t('price-include-2')}</small>`;
 
-    const icon = productIcons[product.iconType] || productIcons.laptop;
+    const imageContent = product.imageUrl
+      ? `<img src="${escapeHtml(product.imageUrl)}" alt="${escapeHtml(product.name)}" loading="lazy">`
+      : (productIcons[product.iconType] || productIcons.laptop);
 
-    const linkHref = isPending ? '#' : `producto.html?id=${product.id}`;
+    const linkHref = isPending ? '#' : `producto.html?id=${encodeURIComponent(product.id)}`;
     const onClickStyle = isPending ? 'pointer-events: none; opacity: 0.6;' : '';
 
     return `
@@ -164,11 +141,11 @@
         <div class="product-image-wrap">
           <span class="product-badge ${badgeClass}">${badgeText}</span>
           ${!isPending ? `<span class="product-availability ${availClass}"><span class="dot"></span><span>${availLabel}</span></span>` : ''}
-          ${icon}
+          ${imageContent}
         </div>
-        <div class="product-meta">${product.brand.toUpperCase()} · ${product.categoryLabel.toUpperCase()}</div>
-        <h3 class="product-name">${product.name}</h3>
-        <p class="product-desc">${product.description}</p>
+        <div class="product-meta">${escapeHtml(product.brand.toUpperCase())} · ${escapeHtml(product.categoryLabel.toUpperCase())}</div>
+        <h3 class="product-name">${escapeHtml(product.name)}</h3>
+        <p class="product-desc">${escapeHtml(product.description)}</p>
         <div class="product-footer">
           <div class="product-price">${priceText}</div>
           <span class="product-cta">
@@ -179,11 +156,9 @@
     `;
   }
 
-  // === Renderizar todo ===
   function render() {
     const filtered = getFilteredProducts();
-
-    totalCount.textContent = products.length;
+    totalCount.textContent = state.allProducts.length;
     resultsCount.textContent = filtered.length;
 
     if (filtered.length === 0) {
@@ -196,7 +171,6 @@
     }
   }
 
-  // === Handlers ===
   function handleFilterChange() {
     state.categories = Array.from(document.querySelectorAll('input[data-filter="category"]:checked')).map(i => i.value);
     state.brands = Array.from(document.querySelectorAll('input[data-filter="brand"]:checked')).map(i => i.value);
@@ -205,58 +179,35 @@
     render();
   }
 
-  searchInput.addEventListener('input', e => {
-    state.search = e.target.value;
-    render();
-  });
-
-  sortSelect.addEventListener('change', e => {
-    state.sort = e.target.value;
-    render();
-  });
-
-  priceMinInput.addEventListener('input', e => {
-    state.priceMin = e.target.value ? parseFloat(e.target.value) : null;
-    render();
-  });
-
-  priceMaxInput.addEventListener('input', e => {
-    state.priceMax = e.target.value ? parseFloat(e.target.value) : null;
-    render();
-  });
+  searchInput.addEventListener('input', e => { state.search = e.target.value; render(); });
+  sortSelect.addEventListener('change', e => { state.sort = e.target.value; render(); });
+  priceMinInput.addEventListener('input', e => { state.priceMin = e.target.value ? parseFloat(e.target.value) : null; render(); });
+  priceMaxInput.addEventListener('input', e => { state.priceMax = e.target.value ? parseFloat(e.target.value) : null; render(); });
 
   clearBtn.addEventListener('click', () => {
     document.querySelectorAll('input[data-filter]').forEach(i => {
-      // Reset disponibilidad a "disponible" por defecto
       i.checked = (i.dataset.filter === 'availability' && i.value === 'true');
     });
     searchInput.value = '';
     priceMinInput.value = '';
     priceMaxInput.value = '';
     sortSelect.value = 'relevance';
-    state.search = '';
-    state.categories = [];
-    state.brands = [];
-    state.conditions = [];
-    state.availability = [true];
-    state.priceMin = null;
-    state.priceMax = null;
-    state.sort = 'relevance';
+    Object.assign(state, { search: '', categories: [], brands: [], conditions: [], availability: [true], priceMin: null, priceMax: null, sort: 'relevance' });
     render();
   });
 
   if (filtersToggle) {
-    filtersToggle.addEventListener('click', () => {
-      filtersSidebar.classList.toggle('open');
-    });
+    filtersToggle.addEventListener('click', () => filtersSidebar.classList.toggle('open'));
   }
 
-  // Re-render cuando cambia el idioma
   document.addEventListener('langChanged', render);
 
-  // Inicializar
-  buildDynamicFilters();
-  // Re-aplicar el idioma a los checkboxes recién creados
-  setTimeout(() => setLang(getCurrentLang()), 50);
-  render();
+  // Cargar desde Supabase
+  (async function init() {
+    grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: var(--fg-3); font-family: 'Space Mono', monospace;">Cargando productos...</div>`;
+    state.allProducts = await fetchAllProducts();
+    buildDynamicFilters();
+    setTimeout(() => setLang(getCurrentLang()), 50);
+    render();
+  })();
 })();
