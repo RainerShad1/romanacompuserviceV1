@@ -1,21 +1,9 @@
 // ================================================
-// ROMANA COMPUSERVICE - LÓGICA DEL CATÁLOGO
-// Carga productos desde Supabase
+// RCRC COMPUSERVICE - LÓGICA DEL CATÁLOGO
+// Búsqueda, filtros y ordenamiento (con Supabase)
 // ================================================
 
-(function() {
-  const state = {
-    allProducts: [],
-    search: '',
-    categories: [],
-    brands: [],
-    conditions: [],
-    availability: [true],
-    priceMin: null,
-    priceMax: null,
-    sort: 'relevance',
-  };
-
+(async function() {
   const grid = document.getElementById('productsGrid');
   const noResults = document.getElementById('noResults');
   const resultsCount = document.getElementById('resultsCount');
@@ -28,11 +16,35 @@
   const filtersToggle = document.getElementById('filtersToggle');
   const filtersSidebar = document.getElementById('filtersSidebar');
 
+  // Mostrar estado de carga
+  grid.innerHTML = '<div style="grid-column: 1/-1; padding: 60px; display: flex; justify-content: center;"><div style="width: 32px; height: 32px; border: 3px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite;"></div></div>';
+
+  // Cargar productos desde Supabase
+  let products = [];
+  try {
+    products = await fetchProducts();
+  } catch (e) {
+    console.error('Error cargando productos:', e);
+    grid.innerHTML = '<div style="grid-column: 1/-1; padding: 60px; text-align: center; color: var(--fg-3);"><p>Error al cargar productos. Recarga la página.</p></div>';
+    return;
+  }
+
+  const state = {
+    search: '',
+    categories: [],
+    brands: [],
+    conditions: [],
+    availability: [true],
+    priceMin: null,
+    priceMax: null,
+    sort: 'relevance',
+  };
+
   function buildDynamicFilters() {
     const categories = {};
     const brands = {};
 
-    state.allProducts.forEach(p => {
+    products.forEach(p => {
       categories[p.category] = (categories[p.category] || 0) + 1;
       brands[p.brand] = (brands[p.brand] || 0) + 1;
     });
@@ -43,25 +55,34 @@
       components: 'Componentes',
       monitors: 'Monitores',
       accessories: 'Accesorios',
+      printers: 'Impresoras',
     };
 
     const catContainer = document.getElementById('filterCategory');
-    catContainer.innerHTML = Object.entries(categories).map(([cat, count]) => `
-      <label class="filter-option">
-        <input type="checkbox" value="${cat}" data-filter="category">
-        <span>${categoryLabels[cat] || cat}</span>
-        <span class="filter-count">${count}</span>
-      </label>
-    `).join('');
+    if (Object.keys(categories).length === 0) {
+      catContainer.innerHTML = '<p style="color: var(--fg-3); font-size: 12px; padding: 8px;">Sin categorías</p>';
+    } else {
+      catContainer.innerHTML = Object.entries(categories).map(([cat, count]) => `
+        <label class="filter-option">
+          <input type="checkbox" value="${cat}" data-filter="category">
+          <span>${categoryLabels[cat] || cat}</span>
+          <span class="filter-count">${count}</span>
+        </label>
+      `).join('');
+    }
 
     const brandContainer = document.getElementById('filterBrand');
-    brandContainer.innerHTML = Object.entries(brands).map(([brand, count]) => `
-      <label class="filter-option">
-        <input type="checkbox" value="${brand}" data-filter="brand">
-        <span>${brand}</span>
-        <span class="filter-count">${count}</span>
-      </label>
-    `).join('');
+    if (Object.keys(brands).length === 0) {
+      brandContainer.innerHTML = '<p style="color: var(--fg-3); font-size: 12px; padding: 8px;">Sin marcas</p>';
+    } else {
+      brandContainer.innerHTML = Object.entries(brands).map(([brand, count]) => `
+        <label class="filter-option">
+          <input type="checkbox" value="${brand}" data-filter="brand">
+          <span>${brand}</span>
+          <span class="filter-count">${count}</span>
+        </label>
+      `).join('');
+    }
 
     document.querySelectorAll('input[data-filter]').forEach(input => {
       input.addEventListener('change', handleFilterChange);
@@ -69,7 +90,7 @@
   }
 
   function getFilteredProducts() {
-    let filtered = [...state.allProducts];
+    let filtered = [...products];
 
     if (state.search) {
       const term = state.search.toLowerCase();
@@ -80,12 +101,28 @@
       );
     }
 
-    if (state.categories.length > 0) filtered = filtered.filter(p => state.categories.includes(p.category));
-    if (state.brands.length > 0) filtered = filtered.filter(p => state.brands.includes(p.brand));
-    if (state.conditions.length > 0) filtered = filtered.filter(p => state.conditions.includes(p.condition));
-    if (state.availability.length > 0) filtered = filtered.filter(p => state.availability.includes(p.available));
-    if (state.priceMin !== null) filtered = filtered.filter(p => p.price >= state.priceMin);
-    if (state.priceMax !== null) filtered = filtered.filter(p => p.price <= state.priceMax);
+    if (state.categories.length > 0) {
+      filtered = filtered.filter(p => state.categories.includes(p.category));
+    }
+
+    if (state.brands.length > 0) {
+      filtered = filtered.filter(p => state.brands.includes(p.brand));
+    }
+
+    if (state.conditions.length > 0) {
+      filtered = filtered.filter(p => state.conditions.includes(p.condition));
+    }
+
+    if (state.availability.length > 0) {
+      filtered = filtered.filter(p => state.availability.includes(p.available));
+    }
+
+    if (state.priceMin !== null) {
+      filtered = filtered.filter(p => p.price >= state.priceMin);
+    }
+    if (state.priceMax !== null) {
+      filtered = filtered.filter(p => p.price <= state.priceMax);
+    }
 
     switch (state.sort) {
       case 'price-asc':
@@ -112,8 +149,8 @@
   }
 
   function escapeHtml(str) {
-    if (!str) return '';
-    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
   function renderProductCard(product) {
@@ -130,7 +167,7 @@
       : `${formatPrice(product.price)}<small>${product.condition === 'new' ? t('price-include') : t('price-include-2')}</small>`;
 
     const imageContent = product.imageUrl
-      ? `<img src="${escapeHtml(product.imageUrl)}" alt="${escapeHtml(product.name)}" loading="lazy">`
+      ? `<img src="${escapeHtml(product.imageUrl)}" alt="${escapeHtml(product.name)}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;">`
       : (productIcons[product.iconType] || productIcons.laptop);
 
     const linkHref = isPending ? '#' : `producto.html?id=${encodeURIComponent(product.id)}`;
@@ -158,7 +195,7 @@
 
   function render() {
     const filtered = getFilteredProducts();
-    totalCount.textContent = state.allProducts.length;
+    totalCount.textContent = products.length;
     resultsCount.textContent = filtered.length;
 
     if (filtered.length === 0) {
@@ -192,7 +229,10 @@
     priceMinInput.value = '';
     priceMaxInput.value = '';
     sortSelect.value = 'relevance';
-    Object.assign(state, { search: '', categories: [], brands: [], conditions: [], availability: [true], priceMin: null, priceMax: null, sort: 'relevance' });
+    Object.assign(state, {
+      search: '', categories: [], brands: [], conditions: [],
+      availability: [true], priceMin: null, priceMax: null, sort: 'relevance',
+    });
     render();
   });
 
@@ -202,12 +242,7 @@
 
   document.addEventListener('langChanged', render);
 
-  // Cargar desde Supabase
-  (async function init() {
-    grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: var(--fg-3); font-family: 'Space Mono', monospace;">Cargando productos...</div>`;
-    state.allProducts = await fetchAllProducts();
-    buildDynamicFilters();
-    setTimeout(() => setLang(getCurrentLang()), 50);
-    render();
-  })();
+  buildDynamicFilters();
+  setTimeout(() => setLang(getCurrentLang()), 50);
+  render();
 })();

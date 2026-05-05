@@ -1,34 +1,33 @@
 // ================================================
-// RCRC COMPUSERVICE - CONEXIÓN A SUPABASE
+// SUPABASE CLIENT - ROMANA COMPUSERVICE
 // ================================================
-// Cliente de Supabase usado por todo el sitio
-// (catálogo público + panel admin)
+// La anon key es segura de exponer en el navegador.
+// La protección real viene de Row Level Security (RLS)
+// configurado en Supabase.
 // ================================================
 
 const SUPABASE_URL = 'https://dxonfnlrkcxalacvtulm.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4b25mbmxya2N4YWxhY3Z0dWxtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MjIzNzksImV4cCI6MjA5MzQ5ODM3OX0.4M2E427Tw5NH6xMhKjIAQltnOYuN36_pDygBQ74km9I';
 
-// El cliente se carga vía CDN en cada HTML que lo necesite
-// Aquí simplemente lo inicializamos
+// Inicializar cliente Supabase (la librería se carga vía CDN en el HTML)
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ================================================
-// API de PRODUCTOS
+// FUNCIONES DE PRODUCTOS
 // ================================================
 
-async function fetchAllProducts() {
+async function fetchProducts() {
   const { data, error } = await supabaseClient
     .from('products')
     .select('*')
     .order('added_date', { ascending: false });
 
   if (error) {
-    console.error('Error cargando productos:', error);
+    console.error('Error fetching products:', error);
     return [];
   }
-
-  // Convertir snake_case (BD) a camelCase (frontend)
-  return data.map(normalizeProduct);
+  // Normalizar nombres (snake_case → camelCase)
+  return (data || []).map(normalizeProduct);
 }
 
 async function fetchProductById(id) {
@@ -39,35 +38,35 @@ async function fetchProductById(id) {
     .single();
 
   if (error) {
-    console.error('Error cargando producto:', error);
+    console.error('Error fetching product:', error);
     return null;
   }
-
   return normalizeProduct(data);
 }
 
 async function createProduct(product) {
-  const dbProduct = denormalizeProduct(product);
   const { data, error } = await supabaseClient
     .from('products')
-    .insert([dbProduct])
-    .select();
+    .insert([denormalizeProduct(product)])
+    .select()
+    .single();
 
-  return { data: data ? data.map(normalizeProduct) : null, error };
+  if (error) throw error;
+  return normalizeProduct(data);
 }
 
 async function updateProduct(id, updates) {
-  const dbUpdates = denormalizeProduct(updates);
-  // Siempre actualizar updated_at
-  dbUpdates.updated_at = new Date().toISOString();
-
+  const payload = denormalizeProduct(updates);
+  payload.updated_at = new Date().toISOString();
   const { data, error } = await supabaseClient
     .from('products')
-    .update(dbUpdates)
+    .update(payload)
     .eq('id', id)
-    .select();
+    .select()
+    .single();
 
-  return { data: data ? data.map(normalizeProduct) : null, error };
+  if (error) throw error;
+  return normalizeProduct(data);
 }
 
 async function deleteProduct(id) {
@@ -76,131 +75,11 @@ async function deleteProduct(id) {
     .delete()
     .eq('id', id);
 
-  return { error };
+  if (error) throw error;
+  return true;
 }
 
-// ================================================
-// API de SERVICIOS
-// ================================================
-
-async function fetchAllServices() {
-  const { data, error } = await supabaseClient
-    .from('services')
-    .select('*')
-    .order('display_order', { ascending: true });
-
-  if (error) {
-    console.error('Error cargando servicios:', error);
-    return [];
-  }
-
-  return data;
-}
-
-async function createService(service) {
-  const { data, error } = await supabaseClient
-    .from('services')
-    .insert([service])
-    .select();
-
-  return { data, error };
-}
-
-async function updateService(id, updates) {
-  updates.updated_at = new Date().toISOString();
-  const { data, error } = await supabaseClient
-    .from('services')
-    .update(updates)
-    .eq('id', id)
-    .select();
-
-  return { data, error };
-}
-
-async function deleteService(id) {
-  const { error } = await supabaseClient
-    .from('services')
-    .delete()
-    .eq('id', id);
-
-  return { error };
-}
-
-// ================================================
-// API de FOTOS (Storage)
-// ================================================
-
-async function uploadProductImage(file, productId) {
-  // Generar nombre único: productId-timestamp.ext
-  const ext = file.name.split('.').pop().toLowerCase();
-  const fileName = `${productId}-${Date.now()}.${ext}`;
-
-  const { data, error } = await supabaseClient.storage
-    .from('product-images')
-    .upload(fileName, file, {
-      cacheControl: '3600',
-      upsert: false,
-    });
-
-  if (error) {
-    console.error('Error subiendo imagen:', error);
-    return { url: null, error };
-  }
-
-  // Obtener URL pública
-  const { data: urlData } = supabaseClient.storage
-    .from('product-images')
-    .getPublicUrl(fileName);
-
-  return { url: urlData.publicUrl, error: null };
-}
-
-async function deleteProductImage(imageUrl) {
-  if (!imageUrl) return { error: null };
-
-  // Extraer el nombre del archivo de la URL
-  try {
-    const url = new URL(imageUrl);
-    const parts = url.pathname.split('/');
-    const fileName = parts[parts.length - 1];
-
-    const { error } = await supabaseClient.storage
-      .from('product-images')
-      .remove([fileName]);
-
-    return { error };
-  } catch (e) {
-    return { error: e };
-  }
-}
-
-// ================================================
-// API de AUTENTICACIÓN
-// ================================================
-
-async function loginAdmin(email, password) {
-  const { data, error } = await supabaseClient.auth.signInWithPassword({
-    email,
-    password,
-  });
-  return { data, error };
-}
-
-async function logoutAdmin() {
-  const { error } = await supabaseClient.auth.signOut();
-  return { error };
-}
-
-async function getCurrentUser() {
-  const { data, error } = await supabaseClient.auth.getUser();
-  return { user: data?.user, error };
-}
-
-// ================================================
-// HELPERS
-// ================================================
-
-// Convierte el formato BD (snake_case) al formato JS (camelCase)
+// Normalizar entre formato BD (snake_case) y formato JS (camelCase)
 function normalizeProduct(p) {
   if (!p) return null;
   return {
@@ -223,7 +102,6 @@ function normalizeProduct(p) {
   };
 }
 
-// Convierte JS (camelCase) al formato BD (snake_case)
 function denormalizeProduct(p) {
   const out = {};
   if (p.id !== undefined) out.id = p.id;
@@ -245,14 +123,162 @@ function denormalizeProduct(p) {
   return out;
 }
 
-// Iconos SVG por tipo (compatible con products.js viejo)
-const productIcons = {
-  ssd: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h12"/></svg>',
-  laptop: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="20" height="14" rx="2"/><line x1="2" y1="20" x2="22" y2="20"/></svg>',
-  desktop: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
-  monitor: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
-  charger: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>',
-};
+// ================================================
+// FUNCIONES DE SERVICIOS
+// ================================================
+
+async function fetchServices() {
+  const { data, error } = await supabaseClient
+    .from('services')
+    .select('*')
+    .eq('is_active', true)
+    .order('display_order', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching services:', error);
+    return [];
+  }
+  return (data || []).map(normalizeService);
+}
+
+async function fetchAllServices() {
+  // Para el admin: incluye los inactivos también
+  const { data, error } = await supabaseClient
+    .from('services')
+    .select('*')
+    .order('display_order', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching all services:', error);
+    return [];
+  }
+  return (data || []).map(normalizeService);
+}
+
+async function createService(service) {
+  const { data, error } = await supabaseClient
+    .from('services')
+    .insert([denormalizeService(service)])
+    .select()
+    .single();
+
+  if (error) throw error;
+  return normalizeService(data);
+}
+
+async function updateService(id, updates) {
+  const payload = denormalizeService(updates);
+  payload.updated_at = new Date().toISOString();
+  const { data, error } = await supabaseClient
+    .from('services')
+    .update(payload)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return normalizeService(data);
+}
+
+async function deleteService(id) {
+  const { error } = await supabaseClient
+    .from('services')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
+  return true;
+}
+
+function normalizeService(s) {
+  if (!s) return null;
+  return {
+    id: s.id,
+    title: s.title,
+    description: s.description,
+    displayOrder: s.display_order,
+    isActive: s.is_active,
+    whatsappMessage: s.whatsapp_message || '',
+  };
+}
+
+function denormalizeService(s) {
+  const out = {};
+  if (s.id !== undefined) out.id = s.id;
+  if (s.title !== undefined) out.title = s.title;
+  if (s.description !== undefined) out.description = s.description;
+  if (s.displayOrder !== undefined) out.display_order = s.displayOrder;
+  if (s.isActive !== undefined) out.is_active = s.isActive;
+  if (s.whatsappMessage !== undefined) out.whatsapp_message = s.whatsappMessage;
+  return out;
+}
+
+// ================================================
+// AUTENTICACIÓN (para el panel admin)
+// ================================================
+
+async function signIn(email, password) {
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
+    email,
+    password,
+  });
+  if (error) throw error;
+  return data;
+}
+
+async function signOut() {
+  const { error } = await supabaseClient.auth.signOut();
+  if (error) throw error;
+}
+
+async function getCurrentUser() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  return user;
+}
+
+// ================================================
+// SUBIDA DE FOTOS
+// ================================================
+
+async function uploadProductImage(file, productId) {
+  // Generar nombre único
+  const ext = file.name.split('.').pop().toLowerCase();
+  const fileName = `${productId}-${Date.now()}.${ext}`;
+
+  const { data, error } = await supabaseClient.storage
+    .from('product-images')
+    .upload(fileName, file, {
+      cacheControl: '3600',
+      upsert: false,
+    });
+
+  if (error) throw error;
+
+  // Obtener URL pública
+  const { data: urlData } = supabaseClient.storage
+    .from('product-images')
+    .getPublicUrl(fileName);
+
+  return urlData.publicUrl;
+}
+
+async function deleteProductImage(imageUrl) {
+  if (!imageUrl) return;
+  // Extraer el nombre del archivo de la URL pública
+  const parts = imageUrl.split('/product-images/');
+  if (parts.length < 2) return;
+  const fileName = parts[1];
+
+  const { error } = await supabaseClient.storage
+    .from('product-images')
+    .remove([fileName]);
+
+  if (error) console.error('Error eliminando imagen:', error);
+}
+
+// ================================================
+// HELPERS COMPARTIDOS
+// ================================================
 
 function formatPrice(price) {
   if (!price || price === 0) return 'RD$ —';
@@ -270,3 +296,20 @@ function buildWhatsAppLink(product) {
   const msg = messages[lang] || messages.es;
   return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
 }
+
+function buildServiceWhatsAppLink(service) {
+  const phone = '18297538736';
+  const msg = service.whatsappMessage || `Hola, quiero cotizar ${service.title}`;
+  return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+}
+
+// Iconos SVG por tipo
+const productIcons = {
+  ssd: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h12"/></svg>',
+  laptop: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="20" height="14" rx="2"/><line x1="2" y1="20" x2="22" y2="20"/></svg>',
+  desktop: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
+  monitor: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
+  charger: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>',
+  printer: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>',
+  keyboard: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg>',
+};

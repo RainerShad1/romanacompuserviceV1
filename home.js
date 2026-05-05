@@ -1,18 +1,39 @@
 // ================================================
-// ROMANA COMPUSERVICE - PÁGINA DE PRODUCTO (DETALLE)
-// Carga desde Supabase
+// RCRC COMPUSERVICE - PÁGINA DE PRODUCTO (DETALLE)
+// Con Supabase
 // ================================================
 
-(function() {
+(async function() {
   const container = document.getElementById('productContent');
 
-  function escapeHtml(str) {
-    if (!str) return '';
-    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const params = new URLSearchParams(window.location.search);
+  const productId = params.get('id');
+
+  if (!productId) {
+    renderNotFound();
+    return;
   }
 
-  function renderLoading() {
-    container.innerHTML = `<div style="text-align: center; padding: 80px 20px; color: var(--fg-3); font-family: 'Space Mono', monospace;">Cargando producto...</div>`;
+  // Mostrar loading
+  container.innerHTML = '<div style="display: flex; justify-content: center; padding: 100px;"><div style="width: 32px; height: 32px; border: 3px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite;"></div></div>';
+
+  let product;
+  try {
+    product = await fetchProductById(productId);
+  } catch (e) {
+    console.error(e);
+    renderNotFound();
+    return;
+  }
+
+  if (!product) {
+    renderNotFound();
+    return;
+  }
+
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
   function renderNotFound() {
@@ -31,7 +52,7 @@
     setLang(getCurrentLang());
   }
 
-  function renderProduct(product) {
+  function renderProduct() {
     const isPending = product.isPending;
     const badgeClass = isPending ? 'badge-pending' : (product.condition === 'new' ? 'badge-new' : 'badge-used');
     const badgeKey = isPending ? 'badge-pending' : (product.condition === 'new' ? 'badge-new' : 'badge-used');
@@ -40,7 +61,7 @@
     const availKey = product.available ? 'cat-avail-yes' : 'cat-avail-no';
 
     const imageContent = product.imageUrl
-      ? `<img src="${escapeHtml(product.imageUrl)}" alt="${escapeHtml(product.name)}" style="width: 100%; height: 100%; object-fit: cover;">`
+      ? `<img src="${escapeHtml(product.imageUrl)}" alt="${escapeHtml(product.name)}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;">`
       : (productIcons[product.iconType] || productIcons.laptop);
 
     const whatsappLink = buildWhatsAppLink(product);
@@ -90,22 +111,24 @@
             </li>
             <li>
               <span class="spec-label" data-i18n="prod-spec-condition">Condición</span>
-              <span class="spec-value" data-i18n="${product.condition === 'new' ? 'cat-cond-new' : 'cat-cond-used'}">${product.condition === 'new' ? t('cat-cond-new') : t('cat-cond-used')}</span>
+              <span class="spec-value">${product.condition === 'new' ? t('cat-cond-new') : t('cat-cond-used')}</span>
             </li>
             ${product.warranty ? `
-            <li>
-              <span class="spec-label" data-i18n="prod-spec-warranty">Garantía</span>
-              <span class="spec-value">${escapeHtml(product.warranty)}</span>
-            </li>` : ''}
+              <li>
+                <span class="spec-label" data-i18n="prod-spec-warranty">Garantía</span>
+                <span class="spec-value">${escapeHtml(product.warranty)}</span>
+              </li>
+            ` : ''}
             <li>
               <span class="spec-label" data-i18n="prod-spec-availability">Disponibilidad</span>
-              <span class="spec-value ${availClass}" data-i18n="${availKey}">${t(availKey)}</span>
+              <span class="spec-value ${availClass}">${t(availKey)}</span>
             </li>
             ${product.sku ? `
-            <li>
-              <span class="spec-label" data-i18n="prod-spec-sku">Código</span>
-              <span class="spec-value mono">${escapeHtml(product.sku)}</span>
-            </li>` : ''}
+              <li>
+                <span class="spec-label" data-i18n="prod-spec-sku">Código</span>
+                <span class="spec-value mono">${escapeHtml(product.sku)}</span>
+              </li>
+            ` : ''}
           </ul>
 
           <div class="product-actions">
@@ -130,25 +153,6 @@
     setLang(getCurrentLang());
   }
 
-  // Cargar desde Supabase
-  (async function init() {
-    const params = new URLSearchParams(window.location.search);
-    const productId = params.get('id');
-
-    if (!productId) {
-      renderNotFound();
-      return;
-    }
-
-    renderLoading();
-    const product = await fetchProductById(productId);
-
-    if (!product) {
-      renderNotFound();
-    } else {
-      renderProduct(product);
-      // Guardar referencia para re-render al cambiar idioma
-      document.addEventListener('langChanged', () => renderProduct(product));
-    }
-  })();
+  renderProduct();
+  document.addEventListener('langChanged', renderProduct);
 })();

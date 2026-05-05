@@ -1,569 +1,596 @@
 // ================================================
-// ROMANA COMPUSERVICE - LÓGICA DEL PANEL ADMIN
+// ROMANA COMPUSERVICE - PANEL ADMIN
 // ================================================
 
-(function() {
-  'use strict';
-
-  // Estado de la app
-  const state = {
-    user: null,
-    products: [],
-    services: [],
-    currentImageFile: null,
-    currentImageUrl: null,
-    activeTab: 'products',
-  };
-
-  // === ELEMENTOS ===
-  const loginScreen = document.getElementById('loginScreen');
-  const adminApp = document.getElementById('adminApp');
-  const loginForm = document.getElementById('loginForm');
-  const loginError = document.getElementById('loginError');
-  const loginBtn = document.getElementById('loginBtn');
-  const logoutBtn = document.getElementById('logoutBtn');
-
-  const productsList = document.getElementById('productsList');
-  const productsLoading = document.getElementById('productsLoading');
-  const productsEmpty = document.getElementById('productsEmpty');
-  const productsCount = document.getElementById('productsCount');
-
-  const servicesList = document.getElementById('servicesList');
-  const servicesLoading = document.getElementById('servicesLoading');
-  const servicesEmpty = document.getElementById('servicesEmpty');
-  const servicesCount = document.getElementById('servicesCount');
-
-  const productModal = document.getElementById('productModal');
-  const productForm = document.getElementById('productForm');
-  const productModalTitle = document.getElementById('productModalTitle');
-
-  const serviceModal = document.getElementById('serviceModal');
-  const serviceForm = document.getElementById('serviceForm');
-  const serviceModalTitle = document.getElementById('serviceModalTitle');
-
-  const imagePreview = document.getElementById('imagePreview');
-  const productImageInput = document.getElementById('productImage');
-  const uploadImageBtn = document.getElementById('uploadImageBtn');
-  const removeImageBtn = document.getElementById('removeImageBtn');
-
-  const toast = document.getElementById('toast');
-  const toastMessage = document.getElementById('toastMessage');
-
-  // === HELPERS UI ===
-  function showToast(message, isError = false) {
-    toastMessage.textContent = message;
-    toast.classList.toggle('toast-error', isError);
-    toast.style.display = 'block';
-    setTimeout(() => { toast.style.display = 'none'; }, 3500);
+(async function() {
+  // Verificar sesión al cargar
+  const user = await getCurrentUser();
+  if (!user) {
+    window.location.href = 'login.html';
+    return;
   }
 
-  function showError(element, message) {
-    element.textContent = message;
-    element.style.display = 'block';
-  }
-  function hideError(element) {
-    element.style.display = 'none';
-  }
+  // Mostrar email del usuario
+  document.getElementById('userEmail').textContent = user.email;
 
-  function openModal(modal) {
-    modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-  }
-  function closeModal(modal) {
-    modal.style.display = 'none';
-    document.body.style.overflow = '';
-  }
+  // ================ ESTADO ================
+  let productsData = [];
+  let servicesData = [];
+  let currentTab = 'products';
+  let imageFile = null;
+  let imageFileToDelete = null; // si el usuario reemplaza una imagen, la antigua se borra al guardar
+  let confirmCallback = null;
 
-  // Cerrar modales al hacer clic en backdrop o botón cerrar
-  document.querySelectorAll('[data-close-modal]').forEach(el => {
-    el.addEventListener('click', () => {
-      closeModal(productModal);
-      closeModal(serviceModal);
-    });
-  });
+  // ================ DOM ================
+  const productsTbody = document.getElementById('productsTableBody');
+  const servicesTbody = document.getElementById('servicesTableBody');
+  const searchProducts = document.getElementById('searchProducts');
+  const searchServices = document.getElementById('searchServices');
 
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      closeModal(productModal);
-      closeModal(serviceModal);
-    }
-  });
-
-  // === LOGIN ===
-  loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    hideError(loginError);
-    loginBtn.disabled = true;
-    loginBtn.querySelector('span').textContent = 'Entrando...';
-
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
-
-    const { data, error } = await loginAdmin(email, password);
-
-    loginBtn.disabled = false;
-    loginBtn.querySelector('span').textContent = 'Entrar al panel';
-
-    if (error) {
-      showError(loginError, 'Email o contraseña incorrectos.');
-      return;
-    }
-
-    state.user = data.user;
-    enterAdmin();
-  });
-
-  // === LOGOUT ===
-  logoutBtn.addEventListener('click', async () => {
-    if (!confirm('¿Cerrar sesión?')) return;
-    await logoutAdmin();
-    state.user = null;
-    adminApp.style.display = 'none';
-    loginScreen.style.display = 'flex';
-    document.getElementById('loginEmail').value = '';
-    document.getElementById('loginPassword').value = '';
-  });
-
-  // === ENTRAR AL ADMIN (después de login exitoso) ===
-  async function enterAdmin() {
-    loginScreen.style.display = 'none';
-    adminApp.style.display = 'flex';
-    await loadProducts();
-    await loadServices();
-  }
-
-  // === TABS ===
+  // ================ TABS ================
   document.querySelectorAll('.admin-tab').forEach(tab => {
     tab.addEventListener('click', () => {
-      const target = tab.dataset.tab;
-      document.querySelectorAll('.admin-tab').forEach(t => t.classList.toggle('active', t === tab));
-      document.querySelectorAll('.admin-tab-content').forEach(c => {
-        c.classList.toggle('active', c.id === `${target}Tab`);
-      });
-      state.activeTab = target;
+      currentTab = tab.dataset.tab;
+      document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      document.querySelectorAll('.admin-tab-panel').forEach(p => p.style.display = 'none');
+      document.getElementById('panel-' + currentTab).style.display = 'block';
     });
   });
 
-  // === PRODUCTOS ===
+  // ================ LOGOUT ================
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    try {
+      await signOut();
+      window.location.href = 'login.html';
+    } catch (e) {
+      toast('Error al cerrar sesión', 'error');
+    }
+  });
+
+  // ================ CARGA INICIAL ================
+  async function loadAll() {
+    await Promise.all([loadProducts(), loadServices()]);
+    updateStats();
+  }
+
   async function loadProducts() {
-    productsLoading.style.display = 'block';
-    productsList.style.display = 'none';
-    productsEmpty.style.display = 'none';
-
-    state.products = await fetchAllProducts();
-    productsCount.textContent = state.products.length;
-
-    productsLoading.style.display = 'none';
-
-    if (state.products.length === 0) {
-      productsEmpty.style.display = 'block';
-    } else {
+    productsTbody.innerHTML = '<tr><td colspan="7"><div class="loading-overlay"><div class="spinner"></div></div></td></tr>';
+    try {
+      productsData = await fetchProducts();
       renderProducts();
-      productsList.style.display = 'grid';
+    } catch (e) {
+      console.error(e);
+      toast('Error cargando productos', 'error');
     }
   }
 
+  async function loadServices() {
+    servicesTbody.innerHTML = '<tr><td colspan="5"><div class="loading-overlay"><div class="spinner"></div></div></td></tr>';
+    try {
+      servicesData = await fetchAllServices();
+      renderServices();
+    } catch (e) {
+      console.error(e);
+      toast('Error cargando servicios', 'error');
+    }
+  }
+
+  function updateStats() {
+    document.getElementById('statTotal').textContent = productsData.length;
+    document.getElementById('statAvailable').textContent = productsData.filter(p => p.available).length;
+    document.getElementById('statUnavailable').textContent = productsData.filter(p => !p.available).length;
+    document.getElementById('statServices').textContent = servicesData.filter(s => s.isActive).length;
+    document.getElementById('countProducts').textContent = productsData.length;
+    document.getElementById('countServices').textContent = servicesData.length;
+  }
+
+  // ================ RENDER PRODUCTOS ================
   function renderProducts() {
-    productsList.innerHTML = state.products.map(p => `
-      <div class="admin-item">
-        <div class="admin-item-image">
-          ${p.imageUrl
-            ? `<img src="${escapeHtml(p.imageUrl)}" alt="${escapeHtml(p.name)}">`
-            : (productIcons[p.iconType] || productIcons.laptop)
-          }
-        </div>
-        <div class="admin-item-info">
-          <div class="admin-item-meta">${escapeHtml(p.brand)} · ${escapeHtml(p.categoryLabel)} · ${p.sku || '—'}</div>
-          <div class="admin-item-name">
-            ${escapeHtml(p.name)}
-            <div class="admin-item-badges">
-              <span class="mini-badge ${p.condition === 'new' ? 'mini-badge-new' : 'mini-badge-used'}">${p.condition === 'new' ? 'Nuevo' : 'Usado'}</span>
-              <span class="mini-badge ${p.available ? 'mini-badge-available' : 'mini-badge-out'}">${p.available ? 'Disponible' : 'Agotado'}</span>
-            </div>
+    const term = (searchProducts.value || '').toLowerCase().trim();
+    const filtered = term
+      ? productsData.filter(p =>
+          p.name.toLowerCase().includes(term) ||
+          p.brand.toLowerCase().includes(term) ||
+          p.sku.toLowerCase().includes(term)
+        )
+      : productsData;
+
+    if (filtered.length === 0) {
+      productsTbody.innerHTML = `
+        <tr><td colspan="7">
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="20" height="14" rx="2"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
+            <h3>${term ? 'No hay productos que coincidan' : 'Aún no hay productos'}</h3>
+            <p>${term ? 'Prueba con otro término de búsqueda' : 'Agrega tu primer producto con el botón "Agregar producto"'}</p>
           </div>
-          <div class="admin-item-desc">${escapeHtml(p.description)}</div>
-          <div class="admin-item-price">${formatPrice(p.price)}</div>
-        </div>
-        <div class="admin-item-actions">
-          <button class="icon-btn icon-btn-toggle ${p.available ? 'active' : ''}" data-action="toggle-availability" data-id="${p.id}" title="${p.available ? 'Marcar agotado' : 'Marcar disponible'}">
-            ${p.available
-              ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>'
-              : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
-            }
-          </button>
-          <button class="icon-btn" data-action="edit" data-id="${p.id}" title="Editar">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          </button>
-          <button class="icon-btn icon-btn-danger" data-action="delete" data-id="${p.id}" title="Eliminar">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-          </button>
-        </div>
-      </div>
-    `).join('');
-
-    // Bind acciones
-    productsList.querySelectorAll('[data-action]').forEach(btn => {
-      btn.addEventListener('click', handleProductAction);
-    });
-  }
-
-  async function handleProductAction(e) {
-    const action = e.currentTarget.dataset.action;
-    const id = e.currentTarget.dataset.id;
-    const product = state.products.find(p => p.id === id);
-    if (!product) return;
-
-    if (action === 'toggle-availability') {
-      const { error } = await updateProduct(id, { available: !product.available });
-      if (error) {
-        showToast('Error al cambiar disponibilidad: ' + error.message, true);
-      } else {
-        showToast(product.available ? 'Marcado como agotado' : 'Marcado como disponible');
-        await loadProducts();
-      }
-    } else if (action === 'edit') {
-      openProductForm(product);
-    } else if (action === 'delete') {
-      if (!confirm(`¿Eliminar "${product.name}"? Esta acción no se puede deshacer.`)) return;
-      const { error } = await deleteProduct(id);
-      if (error) {
-        showToast('Error al eliminar: ' + error.message, true);
-      } else {
-        // Limpiar la imagen si existía
-        if (product.imageUrl) await deleteProductImage(product.imageUrl);
-        showToast('Producto eliminado');
-        await loadProducts();
-      }
-    }
-  }
-
-  // === FORMULARIO DE PRODUCTO ===
-  document.getElementById('addProductBtn').addEventListener('click', () => {
-    openProductForm(null);
-  });
-
-  function openProductForm(product) {
-    state.currentImageFile = null;
-    state.currentImageUrl = product?.imageUrl || null;
-
-    productModalTitle.textContent = product ? 'Editar producto' : 'Agregar producto';
-    document.getElementById('productEditingId').value = product?.id || '';
-    document.getElementById('productName').value = product?.name || '';
-    document.getElementById('productBrand').value = product?.brand || '';
-    document.getElementById('productCategory').value = product?.category || '';
-    document.getElementById('productCondition').value = product?.condition || 'new';
-    document.getElementById('productPrice').value = product?.price || '';
-    document.getElementById('productSku').value = product?.sku || '';
-    document.getElementById('productWarranty').value = product?.warranty || '';
-    document.getElementById('productIconType').value = product?.iconType || 'laptop';
-    document.getElementById('productDescription').value = product?.description || '';
-    document.getElementById('productLongDescription').value = product?.longDescription || '';
-    document.getElementById('productAvailable').checked = product?.available !== false;
-
-    updateImagePreview(product?.imageUrl);
-    hideError(document.getElementById('productFormError'));
-    openModal(productModal);
-  }
-
-  function updateImagePreview(imageUrl) {
-    if (imageUrl) {
-      imagePreview.innerHTML = `<img src="${escapeHtml(imageUrl)}" alt="Preview">`;
-      removeImageBtn.style.display = 'inline-flex';
-    } else {
-      imagePreview.innerHTML = `
-        <span class="image-preview-placeholder">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-          <span>Sin foto</span>
-        </span>`;
-      removeImageBtn.style.display = 'none';
-    }
-  }
-
-  uploadImageBtn.addEventListener('click', () => productImageInput.click());
-
-  productImageInput.addEventListener('change', (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.size > 5 * 1024 * 1024) {
-      showToast('La foto no puede pesar más de 5 MB', true);
-      productImageInput.value = '';
+        </td></tr>
+      `;
       return;
     }
 
-    state.currentImageFile = file;
-    // Vista previa local
+    productsTbody.innerHTML = filtered.map(p => {
+      const imageHtml = p.imageUrl
+        ? `<img src="${p.imageUrl}" alt="${escape(p.name)}" loading="lazy">`
+        : (productIcons[p.iconType] || productIcons.laptop);
+
+      return `
+        <tr data-id="${escape(p.id)}">
+          <td>
+            <div class="row-image">${imageHtml}</div>
+          </td>
+          <td>
+            <div class="row-name">${escape(p.name)}</div>
+            <div class="row-meta">${escape(p.brand)} · ${escape(p.sku || 'sin código')}</div>
+          </td>
+          <td>${escape(p.categoryLabel)}</td>
+          <td>
+            <span class="status-badge ${p.condition === 'new' ? 'status-available' : 'status-unavailable'}" style="${p.condition === 'used' ? 'color: var(--fg-2); border-color: var(--line); background: var(--bg-3);' : ''}">
+              ${p.condition === 'new' ? 'Nuevo' : 'Usado'}
+            </span>
+          </td>
+          <td><span class="row-price">${formatPrice(p.price)}</span></td>
+          <td>
+            <label class="toggle-switch">
+              <input type="checkbox" ${p.available ? 'checked' : ''} data-toggle-product="${escape(p.id)}">
+              <span class="toggle-slider"></span>
+            </label>
+          </td>
+          <td>
+            <div class="row-actions">
+              <button class="row-action-btn edit" data-edit-product="${escape(p.id)}" title="Editar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <button class="row-action-btn delete" data-delete-product="${escape(p.id)}" title="Eliminar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    // Bind eventos
+    productsTbody.querySelectorAll('[data-toggle-product]').forEach(input => {
+      input.addEventListener('change', () => toggleProductAvailable(input.dataset.toggleProduct, input.checked));
+    });
+    productsTbody.querySelectorAll('[data-edit-product]').forEach(btn => {
+      btn.addEventListener('click', () => openProductModal(btn.dataset.editProduct));
+    });
+    productsTbody.querySelectorAll('[data-delete-product]').forEach(btn => {
+      btn.addEventListener('click', () => confirmDeleteProduct(btn.dataset.deleteProduct));
+    });
+  }
+
+  // ================ RENDER SERVICIOS ================
+  function renderServices() {
+    const term = (searchServices.value || '').toLowerCase().trim();
+    const filtered = term
+      ? servicesData.filter(s =>
+          s.title.toLowerCase().includes(term) ||
+          s.description.toLowerCase().includes(term)
+        )
+      : servicesData;
+
+    if (filtered.length === 0) {
+      servicesTbody.innerHTML = `
+        <tr><td colspan="5">
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+            <h3>${term ? 'No hay servicios que coincidan' : 'Aún no hay servicios'}</h3>
+            <p>${term ? 'Prueba con otro término' : 'Agrega tu primer servicio'}</p>
+          </div>
+        </td></tr>
+      `;
+      return;
+    }
+
+    servicesTbody.innerHTML = filtered.map(s => `
+      <tr data-id="${escape(s.id)}">
+        <td><strong>${s.displayOrder}</strong></td>
+        <td>
+          <div class="row-name">${escape(s.title)}</div>
+          <div class="row-meta">${escape(s.id)}</div>
+        </td>
+        <td style="color: var(--fg-2); font-size: 13px;">${escape(s.description.substring(0, 80))}${s.description.length > 80 ? '...' : ''}</td>
+        <td>
+          <label class="toggle-switch">
+            <input type="checkbox" ${s.isActive ? 'checked' : ''} data-toggle-service="${escape(s.id)}">
+            <span class="toggle-slider"></span>
+          </label>
+        </td>
+        <td>
+          <div class="row-actions">
+            <button class="row-action-btn edit" data-edit-service="${escape(s.id)}" title="Editar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button class="row-action-btn delete" data-delete-service="${escape(s.id)}" title="Eliminar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+
+    servicesTbody.querySelectorAll('[data-toggle-service]').forEach(input => {
+      input.addEventListener('change', () => toggleServiceActive(input.dataset.toggleService, input.checked));
+    });
+    servicesTbody.querySelectorAll('[data-edit-service]').forEach(btn => {
+      btn.addEventListener('click', () => openServiceModal(btn.dataset.editService));
+    });
+    servicesTbody.querySelectorAll('[data-delete-service]').forEach(btn => {
+      btn.addEventListener('click', () => confirmDeleteService(btn.dataset.deleteService));
+    });
+  }
+
+  // ================ MODALES ================
+  function openModal(id) { document.getElementById(id).classList.add('show'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+  document.querySelectorAll('[data-close-modal]').forEach(btn => {
+    btn.addEventListener('click', () => closeModal(btn.dataset.closeModal));
+  });
+  document.querySelectorAll('.modal-backdrop').forEach(bd => {
+    bd.addEventListener('click', e => {
+      if (e.target === bd) closeModal(bd.id);
+    });
+  });
+
+  // ================ MODAL PRODUCTO ================
+  const productForm = document.getElementById('productForm');
+  const imageInput = document.getElementById('productImageInput');
+  const imagePreview = document.getElementById('imagePreview');
+  const imageUploadLabel = document.getElementById('imageUploadLabel');
+  const imageUploadPrompt = document.getElementById('imageUploadPrompt');
+  const imageUploadPreview = document.getElementById('imageUploadPreview');
+  const imageRemoveBtn = document.getElementById('imageRemoveBtn');
+
+  document.getElementById('addProductBtn').addEventListener('click', () => openProductModal(null));
+
+  function openProductModal(productId) {
+    productForm.reset();
+    imageFile = null;
+    imageFileToDelete = null;
+    showImagePrompt();
+
+    const isEdit = !!productId;
+    document.getElementById('productModalTitle').textContent = isEdit ? 'Editar producto' : 'Nuevo producto';
+    document.getElementById('saveProductText').textContent = isEdit ? 'Guardar cambios' : 'Crear producto';
+
+    if (isEdit) {
+      const p = productsData.find(x => x.id === productId);
+      if (!p) return;
+      document.getElementById('productId').value = p.id;
+      document.getElementById('productName').value = p.name;
+      document.getElementById('productBrand').value = p.brand;
+      document.getElementById('productCategory').value = p.category;
+      document.getElementById('productCondition').value = p.condition;
+      document.getElementById('productPrice').value = p.price;
+      document.getElementById('productDescription').value = p.description;
+      document.getElementById('productLongDescription').value = p.longDescription;
+      document.getElementById('productWarranty').value = p.warranty;
+      document.getElementById('productSku').value = p.sku;
+      document.getElementById('productIcon').value = p.iconType;
+      document.getElementById('productAvailable').checked = p.available;
+      document.getElementById('productImageUrl').value = p.imageUrl || '';
+      if (p.imageUrl) {
+        showImagePreview(p.imageUrl);
+      }
+    } else {
+      document.getElementById('productId').value = '';
+      document.getElementById('productAvailable').checked = true;
+      document.getElementById('productImageUrl').value = '';
+    }
+
+    openModal('productModal');
+  }
+
+  imageInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast('La imagen es muy grande. Máximo 5MB.', 'error');
+      imageInput.value = '';
+      return;
+    }
+    imageFile = file;
+    // Si había una imagen antes, marcarla para borrar al guardar
+    const currentUrl = document.getElementById('productImageUrl').value;
+    if (currentUrl) imageFileToDelete = currentUrl;
+    // Vista previa
     const reader = new FileReader();
-    reader.onload = (ev) => updateImagePreview(ev.target.result);
+    reader.onload = ev => showImagePreview(ev.target.result);
     reader.readAsDataURL(file);
   });
 
-  removeImageBtn.addEventListener('click', () => {
-    state.currentImageFile = null;
-    state.currentImageUrl = null;
-    productImageInput.value = '';
-    updateImagePreview(null);
+  imageRemoveBtn.addEventListener('click', e => {
+    e.preventDefault();
+    e.stopPropagation();
+    const currentUrl = document.getElementById('productImageUrl').value;
+    if (currentUrl) imageFileToDelete = currentUrl;
+    document.getElementById('productImageUrl').value = '';
+    imageFile = null;
+    imageInput.value = '';
+    showImagePrompt();
   });
 
-  productForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    hideError(document.getElementById('productFormError'));
+  function showImagePreview(src) {
+    imagePreview.src = src;
+    imageUploadPrompt.style.display = 'none';
+    imageUploadPreview.style.display = 'block';
+    imageUploadLabel.classList.add('has-image');
+  }
 
-    const editingId = document.getElementById('productEditingId').value;
-    const isEditing = !!editingId;
-    const saveBtn = document.getElementById('saveProductBtn');
-    saveBtn.disabled = true;
-    saveBtn.querySelector('span').textContent = 'Guardando...';
+  function showImagePrompt() {
+    imagePreview.src = '';
+    imageUploadPrompt.style.display = 'flex';
+    imageUploadPreview.style.display = 'none';
+    imageUploadLabel.classList.remove('has-image');
+  }
+
+  document.getElementById('saveProductBtn').addEventListener('click', async () => {
+    if (!productForm.checkValidity()) {
+      productForm.reportValidity();
+      return;
+    }
+
+    const btn = document.getElementById('saveProductBtn');
+    const txt = document.getElementById('saveProductText');
+    btn.disabled = true;
+    txt.textContent = 'Guardando...';
 
     try {
-      const categorySelect = document.getElementById('productCategory');
-      const categoryLabel = categorySelect.options[categorySelect.selectedIndex].dataset.label;
-
-      const productData = {
+      const formData = {
         name: document.getElementById('productName').value.trim(),
         brand: document.getElementById('productBrand').value.trim(),
-        category: categorySelect.value,
-        categoryLabel: categoryLabel,
+        category: document.getElementById('productCategory').value,
+        categoryLabel: getCategoryLabel(document.getElementById('productCategory').value),
         condition: document.getElementById('productCondition').value,
         price: parseFloat(document.getElementById('productPrice').value) || 0,
-        sku: document.getElementById('productSku').value.trim(),
-        warranty: document.getElementById('productWarranty').value.trim(),
-        iconType: document.getElementById('productIconType').value,
+        available: document.getElementById('productAvailable').checked,
         description: document.getElementById('productDescription').value.trim(),
         longDescription: document.getElementById('productLongDescription').value.trim(),
-        available: document.getElementById('productAvailable').checked,
+        warranty: document.getElementById('productWarranty').value.trim(),
+        sku: document.getElementById('productSku').value.trim(),
+        iconType: document.getElementById('productIcon').value,
+        imageUrl: document.getElementById('productImageUrl').value,
       };
 
-      // ID: si es nuevo, generamos; si es edición, mantenemos el original
-      const productId = isEditing ? editingId : generateProductId(productData.name);
+      const editId = document.getElementById('productId').value;
+      const newId = editId || generateId(formData.name);
 
-      // Manejar imagen
-      let imageUrl = state.currentImageUrl;
-
-      // Si hay archivo nuevo, subirlo
-      if (state.currentImageFile) {
-        // Si había una imagen anterior, eliminarla primero
-        if (isEditing) {
-          const oldProduct = state.products.find(p => p.id === editingId);
-          if (oldProduct?.imageUrl) {
-            await deleteProductImage(oldProduct.imageUrl);
-          }
-        }
-        const { url, error: uploadError } = await uploadProductImage(state.currentImageFile, productId);
-        if (uploadError) throw new Error('Error subiendo foto: ' + uploadError.message);
-        imageUrl = url;
-      } else if (state.currentImageUrl === null && isEditing) {
-        // Usuario quitó la imagen
-        const oldProduct = state.products.find(p => p.id === editingId);
-        if (oldProduct?.imageUrl) {
-          await deleteProductImage(oldProduct.imageUrl);
-        }
-        imageUrl = '';
+      // Subir imagen si hay
+      if (imageFile) {
+        txt.textContent = 'Subiendo imagen...';
+        formData.imageUrl = await uploadProductImage(imageFile, newId);
       }
 
-      productData.imageUrl = imageUrl || '';
-
-      // Guardar en BD
-      let result;
-      if (isEditing) {
-        result = await updateProduct(editingId, productData);
+      if (editId) {
+        await updateProduct(editId, formData);
+        toast('Producto actualizado', 'success');
       } else {
-        productData.id = productId;
-        result = await createProduct(productData);
+        formData.id = newId;
+        formData.addedDate = new Date().toISOString().split('T')[0];
+        await createProduct(formData);
+        toast('Producto creado', 'success');
       }
 
-      if (result.error) throw new Error(result.error.message);
+      // Borrar imagen vieja si fue reemplazada
+      if (imageFileToDelete && imageFileToDelete !== formData.imageUrl) {
+        await deleteProductImage(imageFileToDelete);
+      }
 
-      showToast(isEditing ? 'Producto actualizado' : 'Producto agregado');
-      closeModal(productModal);
+      closeModal('productModal');
       await loadProducts();
-    } catch (err) {
-      showError(document.getElementById('productFormError'), err.message);
+      updateStats();
+    } catch (e) {
+      console.error(e);
+      toast('Error: ' + (e.message || 'No se pudo guardar'), 'error');
     } finally {
-      saveBtn.disabled = false;
-      saveBtn.querySelector('span').textContent = 'Guardar producto';
+      btn.disabled = false;
+      txt.textContent = editId ? 'Guardar cambios' : 'Crear producto';
     }
   });
 
-  // === SERVICIOS ===
-  async function loadServices() {
-    servicesLoading.style.display = 'block';
-    servicesList.style.display = 'none';
-    servicesEmpty.style.display = 'none';
+  // ================ MODAL SERVICIO ================
+  const serviceForm = document.getElementById('serviceForm');
 
-    state.services = await fetchAllServices();
-    servicesCount.textContent = state.services.length;
+  document.getElementById('addServiceBtn').addEventListener('click', () => openServiceModal(null));
 
-    servicesLoading.style.display = 'none';
+  function openServiceModal(serviceId) {
+    serviceForm.reset();
+    const isEdit = !!serviceId;
+    document.getElementById('serviceModalTitle').textContent = isEdit ? 'Editar servicio' : 'Nuevo servicio';
+    document.getElementById('saveServiceText').textContent = isEdit ? 'Guardar cambios' : 'Crear servicio';
 
-    if (state.services.length === 0) {
-      servicesEmpty.style.display = 'block';
+    if (isEdit) {
+      const s = servicesData.find(x => x.id === serviceId);
+      if (!s) return;
+      document.getElementById('serviceId').value = s.id;
+      document.getElementById('serviceTitle').value = s.title;
+      document.getElementById('serviceDescription').value = s.description;
+      document.getElementById('serviceWhatsapp').value = s.whatsappMessage;
+      document.getElementById('serviceOrder').value = s.displayOrder;
+      document.getElementById('serviceActive').checked = s.isActive;
     } else {
-      renderServices();
-      servicesList.style.display = 'grid';
+      document.getElementById('serviceId').value = '';
+      const maxOrder = servicesData.reduce((max, s) => Math.max(max, s.displayOrder || 0), 0);
+      document.getElementById('serviceOrder').value = maxOrder + 1;
+      document.getElementById('serviceActive').checked = true;
     }
+
+    openModal('serviceModal');
   }
 
-  function renderServices() {
-    servicesList.innerHTML = state.services.map(s => `
-      <div class="admin-item">
-        <div class="admin-item-image">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-        </div>
-        <div class="admin-item-info">
-          <div class="admin-item-meta">SERVICIO · ORDEN ${s.display_order}</div>
-          <div class="admin-item-name">
-            ${escapeHtml(s.title)}
-            <div class="admin-item-badges">
-              <span class="mini-badge ${s.is_active ? 'mini-badge-available' : 'mini-badge-out'}">${s.is_active ? 'Activo' : 'Oculto'}</span>
-            </div>
-          </div>
-          <div class="admin-item-desc">${escapeHtml(s.description)}</div>
-        </div>
-        <div class="admin-item-actions">
-          <button class="icon-btn icon-btn-toggle ${s.is_active ? 'active' : ''}" data-action="toggle-active" data-id="${s.id}" title="${s.is_active ? 'Ocultar' : 'Activar'}">
-            ${s.is_active
-              ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>'
-              : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
-            }
-          </button>
-          <button class="icon-btn" data-action="edit" data-id="${s.id}" title="Editar">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          </button>
-          <button class="icon-btn icon-btn-danger" data-action="delete" data-id="${s.id}" title="Eliminar">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-          </button>
-        </div>
-      </div>
-    `).join('');
-
-    servicesList.querySelectorAll('[data-action]').forEach(btn => {
-      btn.addEventListener('click', handleServiceAction);
-    });
-  }
-
-  async function handleServiceAction(e) {
-    const action = e.currentTarget.dataset.action;
-    const id = e.currentTarget.dataset.id;
-    const service = state.services.find(s => s.id === id);
-    if (!service) return;
-
-    if (action === 'toggle-active') {
-      const { error } = await updateService(id, { is_active: !service.is_active });
-      if (error) {
-        showToast('Error: ' + error.message, true);
-      } else {
-        showToast(service.is_active ? 'Servicio ocultado' : 'Servicio activado');
-        await loadServices();
-      }
-    } else if (action === 'edit') {
-      openServiceForm(service);
-    } else if (action === 'delete') {
-      if (!confirm(`¿Eliminar el servicio "${service.title}"? No se puede deshacer.`)) return;
-      const { error } = await deleteService(id);
-      if (error) {
-        showToast('Error al eliminar: ' + error.message, true);
-      } else {
-        showToast('Servicio eliminado');
-        await loadServices();
-      }
+  document.getElementById('saveServiceBtn').addEventListener('click', async () => {
+    if (!serviceForm.checkValidity()) {
+      serviceForm.reportValidity();
+      return;
     }
-  }
 
-  document.getElementById('addServiceBtn').addEventListener('click', () => {
-    openServiceForm(null);
-  });
-
-  function openServiceForm(service) {
-    serviceModalTitle.textContent = service ? 'Editar servicio' : 'Agregar servicio';
-    document.getElementById('serviceEditingId').value = service?.id || '';
-    document.getElementById('serviceTitle').value = service?.title || '';
-    document.getElementById('serviceDescription').value = service?.description || '';
-    document.getElementById('serviceOrder').value = service?.display_order ?? state.services.length + 1;
-    document.getElementById('serviceActive').checked = service ? service.is_active : true;
-    document.getElementById('serviceWhatsapp').value = service?.whatsapp_message || '';
-    hideError(document.getElementById('serviceFormError'));
-    openModal(serviceModal);
-  }
-
-  serviceForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    hideError(document.getElementById('serviceFormError'));
-
-    const editingId = document.getElementById('serviceEditingId').value;
-    const isEditing = !!editingId;
-    const saveBtn = document.getElementById('saveServiceBtn');
-    saveBtn.disabled = true;
-    saveBtn.querySelector('span').textContent = 'Guardando...';
+    const btn = document.getElementById('saveServiceBtn');
+    const txt = document.getElementById('saveServiceText');
+    btn.disabled = true;
+    txt.textContent = 'Guardando...';
 
     try {
-      const serviceData = {
+      const formData = {
         title: document.getElementById('serviceTitle').value.trim(),
         description: document.getElementById('serviceDescription').value.trim(),
-        display_order: parseInt(document.getElementById('serviceOrder').value, 10) || 0,
-        is_active: document.getElementById('serviceActive').checked,
-        whatsapp_message: document.getElementById('serviceWhatsapp').value.trim(),
+        whatsappMessage: document.getElementById('serviceWhatsapp').value.trim() || `Hola, quiero cotizar ${document.getElementById('serviceTitle').value.trim()}`,
+        displayOrder: parseInt(document.getElementById('serviceOrder').value) || 0,
+        isActive: document.getElementById('serviceActive').checked,
       };
 
-      let result;
-      if (isEditing) {
-        result = await updateService(editingId, serviceData);
+      const editId = document.getElementById('serviceId').value;
+
+      if (editId) {
+        await updateService(editId, formData);
+        toast('Servicio actualizado', 'success');
       } else {
-        serviceData.id = generateServiceId(serviceData.title);
-        result = await createService(serviceData);
+        formData.id = generateId(formData.title);
+        await createService(formData);
+        toast('Servicio creado', 'success');
       }
 
-      if (result.error) throw new Error(result.error.message);
-
-      showToast(isEditing ? 'Servicio actualizado' : 'Servicio agregado');
-      closeModal(serviceModal);
+      closeModal('serviceModal');
       await loadServices();
-    } catch (err) {
-      showError(document.getElementById('serviceFormError'), err.message);
+      updateStats();
+    } catch (e) {
+      console.error(e);
+      toast('Error: ' + (e.message || 'No se pudo guardar'), 'error');
     } finally {
-      saveBtn.disabled = false;
-      saveBtn.querySelector('span').textContent = 'Guardar servicio';
+      btn.disabled = false;
+      txt.textContent = editId ? 'Guardar cambios' : 'Crear servicio';
     }
   });
 
-  // === HELPERS ===
-  function escapeHtml(str) {
-    if (!str) return '';
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
-  }
-
-  function generateProductId(name) {
-    const slug = name.toLowerCase()
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '')
-      .substring(0, 40);
-    return `${slug}-${Date.now().toString(36)}`;
-  }
-
-  function generateServiceId(title) {
-    const slug = title.toLowerCase()
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '')
-      .substring(0, 30);
-    return `${slug}-${Date.now().toString(36)}`;
-  }
-
-  // === INICIO: verificar si ya hay sesión activa ===
-  (async function init() {
-    const { user } = await getCurrentUser();
-    if (user) {
-      state.user = user;
-      enterAdmin();
-    } else {
-      loginScreen.style.display = 'flex';
+  // ================ TOGGLES ================
+  async function toggleProductAvailable(id, value) {
+    try {
+      await updateProduct(id, { available: value });
+      const p = productsData.find(x => x.id === id);
+      if (p) p.available = value;
+      updateStats();
+      toast(value ? 'Producto disponible' : 'Producto agotado', 'success');
+    } catch (e) {
+      toast('Error al cambiar disponibilidad', 'error');
+      loadProducts();
     }
-  })();
+  }
 
+  async function toggleServiceActive(id, value) {
+    try {
+      await updateService(id, { isActive: value });
+      const s = servicesData.find(x => x.id === id);
+      if (s) s.isActive = value;
+      updateStats();
+      toast(value ? 'Servicio activado' : 'Servicio desactivado', 'success');
+    } catch (e) {
+      toast('Error al cambiar estado', 'error');
+      loadServices();
+    }
+  }
+
+  // ================ DELETE ================
+  function confirmDeleteProduct(id) {
+    const p = productsData.find(x => x.id === id);
+    if (!p) return;
+    showConfirm(
+      'Eliminar producto',
+      `¿Seguro que quieres eliminar "${p.name}"? Esta acción no se puede deshacer.`,
+      async () => {
+        try {
+          if (p.imageUrl) await deleteProductImage(p.imageUrl);
+          await deleteProduct(id);
+          toast('Producto eliminado', 'success');
+          await loadProducts();
+          updateStats();
+        } catch (e) {
+          toast('Error al eliminar', 'error');
+        }
+      }
+    );
+  }
+
+  function confirmDeleteService(id) {
+    const s = servicesData.find(x => x.id === id);
+    if (!s) return;
+    showConfirm(
+      'Eliminar servicio',
+      `¿Seguro que quieres eliminar "${s.title}"? Esta acción no se puede deshacer.`,
+      async () => {
+        try {
+          await deleteService(id);
+          toast('Servicio eliminado', 'success');
+          await loadServices();
+          updateStats();
+        } catch (e) {
+          toast('Error al eliminar', 'error');
+        }
+      }
+    );
+  }
+
+  function showConfirm(title, message, callback) {
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmMessage').textContent = message;
+    confirmCallback = callback;
+    openModal('confirmModal');
+  }
+
+  document.getElementById('confirmActionBtn').addEventListener('click', async () => {
+    if (confirmCallback) {
+      const cb = confirmCallback;
+      confirmCallback = null;
+      closeModal('confirmModal');
+      await cb();
+    }
+  });
+
+  // ================ BÚSQUEDA ================
+  searchProducts.addEventListener('input', renderProducts);
+  searchServices.addEventListener('input', renderServices);
+
+  // ================ HELPERS ================
+  function escape(str) {
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function getCategoryLabel(cat) {
+    const map = {
+      laptops: 'Laptops',
+      desktops: 'Computadoras',
+      components: 'Componentes',
+      monitors: 'Monitores',
+      accessories: 'Accesorios',
+      printers: 'Impresoras',
+    };
+    return map[cat] || cat;
+  }
+
+  function generateId(name) {
+    const slug = name.toLowerCase()
+      .replace(/[áàä]/g,'a').replace(/[éèë]/g,'e').replace(/[íìï]/g,'i')
+      .replace(/[óòö]/g,'o').replace(/[úùü]/g,'u').replace(/ñ/g,'n')
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').substring(0, 30);
+    const suffix = Math.random().toString(36).substring(2, 6);
+    return `${slug}-${suffix}`;
+  }
+
+  function toast(message, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    el.textContent = message;
+    container.appendChild(el);
+    setTimeout(() => {
+      el.classList.add('exiting');
+      setTimeout(() => el.remove(), 300);
+    }, 3000);
+  }
+
+  // ================ INICIAR ================
+  loadAll();
 })();
