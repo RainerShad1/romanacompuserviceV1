@@ -1,158 +1,122 @@
 // ================================================
-// RCRC COMPUSERVICE - PÁGINA DE PRODUCTO (DETALLE)
-// Con Supabase
+// ROMANA COMPUSERVICE - LÓGICA DE LA HOME
+// Carga productos destacados y servicios desde Supabase
 // ================================================
 
-(async function() {
-  const container = document.getElementById('productContent');
-
-  const params = new URLSearchParams(window.location.search);
-  const productId = params.get('id');
-
-  if (!productId) {
-    renderNotFound();
-    return;
-  }
-
-  // Mostrar loading
-  container.innerHTML = '<div style="display: flex; justify-content: center; padding: 100px;"><div style="width: 32px; height: 32px; border: 3px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite;"></div></div>';
-
-  let product;
-  try {
-    product = await fetchProductById(productId);
-  } catch (e) {
-    console.error(e);
-    renderNotFound();
-    return;
-  }
-
-  if (!product) {
-    renderNotFound();
-    return;
-  }
+(function() {
 
   function escapeHtml(str) {
-    if (str === null || str === undefined) return '';
-    return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  function renderNotFound() {
-    container.innerHTML = `
-      <div style="max-width: 600px; margin: 0 auto; text-align: center; padding: 80px 20px;">
-        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: var(--fg-3); margin-bottom: 24px;">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="12" y1="8" x2="12" y2="12"/>
-          <line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
-        <h1 style="font-family: 'Archivo Black', sans-serif; font-size: 32px; margin-bottom: 16px;" data-i18n="prod-not-found-title">Producto no encontrado</h1>
-        <p style="color: var(--fg-2); margin-bottom: 32px;" data-i18n="prod-not-found-desc">El producto que buscas no existe o fue removido.</p>
-        <a href="catalogo.html" class="btn btn-primary" data-i18n="prod-back-catalog">← Volver al catálogo</a>
-      </div>
-    `;
-    setLang(getCurrentLang());
-  }
+  function renderFeaturedCard(product) {
+    const badgeClass = product.condition === 'new' ? 'badge-new' : 'badge-used';
+    const badgeKey = product.condition === 'new' ? 'badge-new' : 'badge-used';
+    const badgeText = t(badgeKey);
 
-  function renderProduct() {
-    const isPending = product.isPending;
-    const badgeClass = isPending ? 'badge-pending' : (product.condition === 'new' ? 'badge-new' : 'badge-used');
-    const badgeKey = isPending ? 'badge-pending' : (product.condition === 'new' ? 'badge-new' : 'badge-used');
-
+    const availLabel = product.available ? t('cat-avail-yes') : t('cat-avail-no');
     const availClass = product.available ? 'available' : 'out-of-stock';
-    const availKey = product.available ? 'cat-avail-yes' : 'cat-avail-no';
 
     const imageContent = product.imageUrl
-      ? `<img src="${escapeHtml(product.imageUrl)}" alt="${escapeHtml(product.name)}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;">`
+      ? `<img src="${escapeHtml(product.imageUrl)}" alt="${escapeHtml(product.name)}" loading="lazy">`
       : (productIcons[product.iconType] || productIcons.laptop);
 
-    const whatsappLink = buildWhatsAppLink(product);
+    const priceText = `${formatPrice(product.price)}<small>${product.condition === 'new' ? t('price-include') : t('price-include-2')}</small>`;
 
-    container.innerHTML = `
-      <div class="product-detail-grid">
-        <div class="product-detail-image">
+    return `
+      <a href="producto.html?id=${encodeURIComponent(product.id)}" class="product-card">
+        <div class="product-image-wrap">
+          <span class="product-badge ${badgeClass}">${badgeText}</span>
+          <span class="product-availability ${availClass}"><span class="dot"></span><span>${availLabel}</span></span>
           ${imageContent}
-          <span class="product-badge ${badgeClass}" style="position: absolute; top: 20px; left: 20px;" data-i18n="${badgeKey}">${t(badgeKey)}</span>
-          ${!isPending ? `<span class="product-availability ${availClass}" style="position: absolute; top: 20px; right: 20px;"><span class="dot"></span><span data-i18n="${availKey}">${t(availKey)}</span></span>` : ''}
         </div>
-
-        <div class="product-detail-info">
-          <div class="breadcrumb">
-            <a href="index.html" data-i18n="prod-breadcrumb-home">Inicio</a>
-            <span> / </span>
-            <a href="catalogo.html" data-i18n="prod-breadcrumb-cat">Catálogo</a>
-            <span> / </span>
-            <span>${escapeHtml(product.name)}</span>
-          </div>
-
-          <div class="product-detail-meta">${escapeHtml(product.brand)} · ${escapeHtml(product.categoryLabel)}</div>
-          <h1 class="product-detail-name">${escapeHtml(product.name)}</h1>
-
-          ${!isPending ? `
-            <div class="product-detail-price">
-              ${formatPrice(product.price)}
-              <small>${product.condition === 'new' ? t('price-include') : t('price-include-2')}</small>
-            </div>
-          ` : `
-            <div class="product-detail-price" style="color: var(--fg-3);">
-              RD$ —
-              <small data-i18n="pending">${t('pending')}</small>
-            </div>
-          `}
-
-          <p class="product-detail-desc">${escapeHtml(product.longDescription || product.description)}</p>
-
-          <ul class="product-specs">
-            <li>
-              <span class="spec-label" data-i18n="prod-spec-brand">Marca</span>
-              <span class="spec-value">${escapeHtml(product.brand)}</span>
-            </li>
-            <li>
-              <span class="spec-label" data-i18n="prod-spec-category">Categoría</span>
-              <span class="spec-value">${escapeHtml(product.categoryLabel)}</span>
-            </li>
-            <li>
-              <span class="spec-label" data-i18n="prod-spec-condition">Condición</span>
-              <span class="spec-value">${product.condition === 'new' ? t('cat-cond-new') : t('cat-cond-used')}</span>
-            </li>
-            ${product.warranty ? `
-              <li>
-                <span class="spec-label" data-i18n="prod-spec-warranty">Garantía</span>
-                <span class="spec-value">${escapeHtml(product.warranty)}</span>
-              </li>
-            ` : ''}
-            <li>
-              <span class="spec-label" data-i18n="prod-spec-availability">Disponibilidad</span>
-              <span class="spec-value ${availClass}">${t(availKey)}</span>
-            </li>
-            ${product.sku ? `
-              <li>
-                <span class="spec-label" data-i18n="prod-spec-sku">Código</span>
-                <span class="spec-value mono">${escapeHtml(product.sku)}</span>
-              </li>
-            ` : ''}
-          </ul>
-
-          <div class="product-actions">
-            ${!isPending && product.available ? `
-              <a href="${whatsappLink}" target="_blank" rel="noopener" class="btn btn-primary">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 6.32A7.85 7.85 0 0012.05 4a7.94 7.94 0 00-6.88 11.91L4 20l4.2-1.1a7.93 7.93 0 003.85.98h.01a7.93 7.93 0 007.92-7.93 7.86 7.86 0 00-2.38-5.63z"/></svg>
-                <span data-i18n="prod-cta-whatsapp">${t('prod-cta-whatsapp')}</span>
-              </a>
-              <a href="tel:+18297538736" class="btn btn-ghost">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                <span data-i18n="prod-cta-call">${t('prod-cta-call')}</span>
-              </a>
-            ` : `
-              <a href="catalogo.html" class="btn btn-ghost">
-                <span data-i18n="prod-back-catalog">${t('prod-back-catalog')}</span>
-              </a>
-            `}
-          </div>
+        <div class="product-meta">${escapeHtml(product.brand.toUpperCase())} · ${escapeHtml(product.categoryLabel.toUpperCase())}</div>
+        <h3 class="product-name">${escapeHtml(product.name)}</h3>
+        <p class="product-desc">${escapeHtml(product.description)}</p>
+        <div class="product-footer">
+          <div class="product-price">${priceText}</div>
+          <span class="product-cta">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </span>
         </div>
-      </div>
+      </a>
     `;
-    setLang(getCurrentLang());
   }
 
-  renderProduct();
-  document.addEventListener('langChanged', renderProduct);
+  function renderExploreCard() {
+    return `
+      <a href="catalogo.html" class="product-card product-card-cta">
+        <div class="product-cta-inner">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <h3 data-i18n="explore-title">${t('explore-title')}</h3>
+          <p data-i18n="explore-desc">${t('explore-desc')}</p>
+        </div>
+      </a>
+    `;
+  }
+
+  async function loadFeaturedProducts() {
+    const container = document.getElementById('featuredProducts');
+    if (!container) return;
+
+    const allProducts = await fetchAllProducts();
+
+    // Filtrar productos no-pendientes y disponibles, tomar máximo 2 destacados
+    const featured = allProducts
+      .filter(p => !p.isPending && p.available)
+      .sort((a, b) => new Date(b.addedDate) - new Date(a.addedDate))
+      .slice(0, 2);
+
+    if (featured.length === 0) {
+      // Si no hay productos, ocultar la sección
+      const section = document.getElementById('destacados');
+      if (section) section.style.display = 'none';
+      return;
+    }
+
+    container.innerHTML = featured.map(renderFeaturedCard).join('') + renderExploreCard();
+  }
+
+  async function loadServices() {
+    const grid = document.querySelector('.services-grid');
+    if (!grid) return;
+
+    const services = await fetchAllServices();
+    const activeServices = services.filter(s => s.is_active);
+
+    if (activeServices.length === 0) {
+      const section = document.getElementById('servicios');
+      if (section) section.style.display = 'none';
+      return;
+    }
+
+    const total = activeServices.length;
+    grid.innerHTML = activeServices.map((s, idx) => {
+      const num = String(idx + 1).padStart(2, '0');
+      const totalStr = String(total).padStart(2, '0');
+      const waMsg = s.whatsapp_message || `Hola, quiero cotizar ${s.title.toLowerCase()}`;
+      const waLink = `https://wa.me/18297538736?text=${encodeURIComponent(waMsg)}`;
+
+      return `
+        <div class="service-card">
+          <div class="service-num">${num} / ${totalStr}</div>
+          <h3 class="service-title">${escapeHtml(s.title)}</h3>
+          <p class="service-desc">${escapeHtml(s.description)}</p>
+          <a href="${waLink}" target="_blank" rel="noopener" class="service-cta">
+            <span data-i18n="serv-cta">${t('serv-cta')}</span>
+          </a>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Cargar todo cuando el DOM esté listo
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+      loadFeaturedProducts();
+      loadServices();
+    }, 100);
+  });
+
 })();
