@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Catálogo · RCRC Compuservice</title>
-<meta name="description" content="Explora todos nuestros productos: laptops, computadoras, componentes, monitores y accesorios.">
+<title>RCRC Compuservice & Repair Center — La Romana</title>
+<meta name="description" content="Venta de equipos informáticos y servicio técnico especializado en La Romana. Laptops, computadoras, componentes y reparaciones.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Archivo:wght@400;500;600;800;900&family=Archivo+Black&display=swap" rel="stylesheet">
@@ -12,20 +12,24 @@
 </head>
 <body>
 
+<!-- HEADER -->
 <header>
   <div class="header-inner">
     <a href="index.html" class="logo">
       <img src="assets/logo.png" alt="RCRC" class="logo-img" onerror="this.onerror=null; this.src='assets/logo-fallback.svg';">
       
-      <div class="logo-text">Romana<br><small>COMPUSERVICE</small></div>
+      <div class="logo-text">
+        Romana<br>
+        <small>COMPUSERVICE</small>
+      </div>
     </a>
 
     <nav id="mainNav">
       <ul>
         <li><a href="catalogo.html" data-i18n="nav-products">Productos</a></li>
-        <li><a href="index.html#servicios" data-i18n="nav-services">Servicios</a></li>
-        <li><a href="index.html#resenas" data-i18n="nav-reviews">Reseñas</a></li>
-        <li><a href="index.html#contacto" data-i18n="nav-contact">Contacto</a></li>
+        <li><a href="#servicios" data-i18n="nav-services">Servicios</a></li>
+        <li><a href="#resenas" data-i18n="nav-reviews">Reseñas</a></li>
+        <li><a href="#contacto" data-i18n="nav-contact">Contacto</a></li>
       </ul>
     </nav>
 
@@ -43,121 +47,274 @@
   </div>
 </header>
 
-<div class="catalog-page">
-  <div class="catalog-header">
-    <div class="breadcrumb">
-      <a href="index.html" data-i18n="cat-breadcrumb-home">Inicio</a>
-      <span> / </span>
-      <span data-i18n="cat-breadcrumb-current">Catálogo</span>
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid">
+    <div>
+      <div class="hero-tag reveal reveal-1">
+        <span class="dot"></span>
+        <span class="mono" data-i18n="hero-tag">ABIERTO AHORA · LA ROMANA, RD</span>
+      </div>
+
+      <h1 class="reveal reveal-2">
+        <span data-i18n="hero-1">Tecnología que</span><br>
+        <span class="strike" data-i18n="hero-2">funciona</span><br>
+        <span data-i18n="hero-3">y servicio que</span> <em data-i18n="hero-4">resuelve.</em>
+      </h1>
+
+      <p class="reveal reveal-3" data-i18n="hero-desc">
+        Venta de equipos informáticos y reparación especializada en La Romana. Más de 55 reseñas reales avalan nuestro trabajo.
+      </p>
+
+      <div class="hero-cta reveal reveal-4">
+        <a href="catalogo.html" class="btn btn-primary">
+          <span data-i18n="hero-cta-1">Ver catálogo</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+        <a href="https://wa.me/18297538736" target="_blank" rel="noopener" class="btn btn-ghost">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 6.32A7.85 7.85 0 0012.05 4a7.94 7.94 0 00-6.88 11.91L4 20l4.2-1.1a7.93 7.93 0 003.85.98h.01a7.93 7.93 0 007.92-7.93 7.86 7.86 0 00-2.38-5.63zM12.05 18.55a6.59 6.59 0 01-3.36-.92l-.24-.14-2.49.65.66-2.43-.16-.25a6.6 6.6 0 0110.21-8.16 6.55 6.55 0 011.93 4.66 6.6 6.6 0 01-6.55 6.59z"/></svg>
+          <span data-i18n="hero-cta-2">WhatsApp directo</span>
+        </a>
+      </div>
+
+      <div class="hero-stats">
+        <div>
+          <div class="stat-num">4.8★</div>
+          <div class="stat-label" data-i18n="stat-1">Google Reviews</div>
+        </div>
+        <div>
+          <div class="stat-num">55+</div>
+          <div class="stat-label" data-i18n="stat-2">Clientes felices</div>
+        </div>
+        <div>
+          <div class="stat-num">10+</div>
+          <div class="stat-label" data-i18n="stat-3">Años de experiencia</div>
+        </div>
+      </div>
     </div>
-    <h1 class="catalog-title">
-      <span data-i18n="cat-title-1">Catálogo</span> <em data-i18n="cat-title-2">completo</em>
-    </h1>
-    <p class="catalog-subtitle" data-i18n="cat-subtitle">
-      Explora nuestro inventario. Usa la búsqueda, los filtros laterales y el ordenamiento para encontrar exactamente lo que necesitas.
-    </p>
+
+    <div class="hero-visual">
+      <div class="hero-card hero-card-1">
+        <div class="label">SSD · KINGSTON</div>
+        <h4>Disco sólido 528GB</h4>
+        <div class="price" style="color: var(--accent)">RD$ 3,200</div>
+      </div>
+      <div class="hero-card hero-card-2">
+        <div class="label">REPARACIÓN</div>
+        <h4>Diagnóstico técnico</h4>
+        <div class="price">GRATIS</div>
+      </div>
+      <div class="hero-card hero-card-3">
+        <div class="label">DELL · CORE i5</div>
+        <h4>Laptop Dell i5</h4>
+        <div class="price" style="color: var(--accent)">RD$ 28,500</div>
+      </div>
+    </div>
   </div>
+</section>
 
-  <div class="catalog-toolbar">
-    <button class="toolbar-toggle" id="filtersToggle">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
-      <span data-i18n="cat-filter-toggle">Filtros</span>
-    </button>
-
-    <div class="search-input-wrap">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" id="searchInput" class="search-input" placeholder="Buscar productos..." data-i18n-placeholder="cat-search-placeholder">
+<!-- DESTACADOS -->
+<section id="destacados">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <div class="section-eyebrow" data-i18n="dest-eyebrow">// 01 — Destacados</div>
+        <h2 class="section-title">
+          <span data-i18n="dest-title-1">Productos</span> <em data-i18n="dest-title-2">disponibles</em>
+        </h2>
+      </div>
+      <a href="catalogo.html" class="btn btn-ghost" style="height: fit-content">
+        <span data-i18n="dest-cta">Ver catálogo completo</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
     </div>
 
-    <select id="sortSelect" class="sort-select">
-      <option value="relevance" data-i18n="cat-sort-relevance">Relevancia</option>
-      <option value="price-asc" data-i18n="cat-sort-price-asc">Precio: menor a mayor</option>
-      <option value="price-desc" data-i18n="cat-sort-price-desc">Precio: mayor a menor</option>
-      <option value="name" data-i18n="cat-sort-name">Nombre A-Z</option>
-      <option value="newest" data-i18n="cat-sort-newest">Más nuevos primero</option>
-    </select>
+    <div class="product-grid-featured" id="featuredProducts">
+      <!-- Los productos destacados se cargan desde Supabase -->
+      <div style="grid-column: 1/-1; text-align: center; padding: 40px 20px; color: var(--fg-3); font-family: 'Space Mono', monospace;" id="featuredLoading">Cargando productos...</div>
+    </div>
   </div>
+</section>
 
-  <div class="catalog-layout">
-    <aside class="filters-sidebar" id="filtersSidebar">
-      <div class="filter-group">
-        <h4 data-i18n="cat-filter-category">Categoría</h4>
-        <div class="filter-options" id="filterCategory">
-          <!-- Generado por JS -->
-        </div>
+<!-- SERVICIOS -->
+<section id="servicios" class="services">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <div class="section-eyebrow" data-i18n="serv-eyebrow">// 02 — Servicio técnico</div>
+        <h2 class="section-title">
+          <span data-i18n="serv-title-1">Reparación</span> <em data-i18n="serv-title-2">profesional.</em>
+        </h2>
       </div>
+      <p class="section-meta" data-i18n="serv-meta">↳ Diagnóstico transparente. Cotización antes de proceder.</p>
+    </div>
 
-      <div class="filter-group">
-        <h4 data-i18n="cat-filter-brand">Marca</h4>
-        <div class="filter-options" id="filterBrand">
-          <!-- Generado por JS -->
-        </div>
-      </div>
-
-      <div class="filter-group">
-        <h4 data-i18n="cat-filter-condition">Condición</h4>
-        <div class="filter-options" id="filterCondition">
-          <label class="filter-option">
-            <input type="checkbox" value="new" data-filter="condition">
-            <span data-i18n="cat-cond-new">Nuevo</span>
-          </label>
-          <label class="filter-option">
-            <input type="checkbox" value="used" data-filter="condition">
-            <span data-i18n="cat-cond-used">Usado</span>
-          </label>
-        </div>
-      </div>
-
-      <div class="filter-group">
-        <h4 data-i18n="cat-filter-availability">Disponibilidad</h4>
-        <div class="filter-options" id="filterAvailability">
-          <label class="filter-option">
-            <input type="checkbox" value="true" data-filter="availability" checked>
-            <span data-i18n="cat-avail-yes">Disponible</span>
-          </label>
-          <label class="filter-option">
-            <input type="checkbox" value="false" data-filter="availability">
-            <span data-i18n="cat-avail-no">Agotado</span>
-          </label>
-        </div>
-      </div>
-
-      <div class="filter-group">
-        <h4 data-i18n="cat-filter-price">Rango de precio (RD$)</h4>
-        <div class="price-range">
-          <input type="number" id="priceMin" class="price-input" placeholder="Mín" data-i18n-placeholder="cat-filter-min" min="0">
-          <span style="color: var(--fg-3)">—</span>
-          <input type="number" id="priceMax" class="price-input" placeholder="Máx" data-i18n-placeholder="cat-filter-max" min="0">
-        </div>
-      </div>
-
-      <button class="filter-clear" id="clearFilters" data-i18n="cat-filter-clear">Limpiar filtros</button>
-    </aside>
-
-    <main class="catalog-results">
-      <div class="results-info">
-        <div class="results-count">
-          <span data-i18n="cat-results-showing">Mostrando</span>
-          <strong id="resultsCount">0</strong>
-          <span data-i18n="cat-results-of">de</span>
-          <strong id="totalCount">0</strong>
-          <span data-i18n="cat-results-products">productos</span>
-        </div>
-      </div>
-
-      <div class="products-grid-catalog" id="productsGrid">
-        <!-- Generado por JS -->
-      </div>
-
-      <div class="no-results" id="noResults" style="display: none;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <h3 data-i18n="cat-no-results-title">No encontramos productos</h3>
-        <p data-i18n="cat-no-results-desc">Intenta cambiar los filtros o limpiar la búsqueda.</p>
-      </div>
-    </main>
+    <div class="services-grid">
+      <div style="grid-column: 1/-1; text-align: center; padding: 40px 20px; color: var(--fg-3); font-family: 'Space Mono', monospace;">Cargando servicios...</div>
+    </div>
   </div>
-</div>
+</section>
 
+<!-- RESEÑAS REDISEÑADAS -->
+<section id="resenas" class="reviews-section">
+  <div class="container">
+    <div class="reviews-hero">
+      <div class="reviews-hero-text">
+        <div class="section-eyebrow" data-i18n="rev-eyebrow">// 03</div>
+        <h2 class="reviews-big-title">Re<em>señas</em>.</h2>
+        <p class="reviews-sub" data-i18n="rev-sub">La confianza no se dice, se demuestra. Estas son palabras reales de clientes reales.</p>
+      </div>
+
+      <div class="reviews-rating-block">
+        <div class="rating-number">4.8</div>
+        <div class="stars">
+          <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+        </div>
+        <div class="rating-source">
+          <span data-i18n="rev-count">55 reseñas verificadas</span>
+          <small data-i18n="rev-via">vía Google</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="reviews-grid">
+      <div class="review-card">
+        <div class="review-quote">"</div>
+        <div class="review-stars">
+          <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+        </div>
+        <p class="review-text" data-i18n="rev-1">Servicio impecable. Excelente atención, puntualidad y un ambiente muy cómodo. Cuando revisan tu equipo te explican todo en detalle. Son los MEJORES, 10/10.</p>
+        <div class="review-author">
+          <div class="review-avatar">CV</div>
+          <div>
+            <div class="review-name" data-i18n="rev-1-name">Cliente verificado</div>
+            <div class="review-source">Google · 2025</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="review-card">
+        <div class="review-quote">"</div>
+        <div class="review-stars">
+          <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+        </div>
+        <p class="review-text" data-i18n="rev-2">Llevé mi laptop y diagnosticaron el problema rápido. Son muy profesionales. Erika es competente en lo que hace.</p>
+        <div class="review-author">
+          <div class="review-avatar">CV</div>
+          <div>
+            <div class="review-name" data-i18n="rev-2-name">Cliente verificado</div>
+            <div class="review-source">Google · 2025</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="review-card">
+        <div class="review-quote">"</div>
+        <div class="review-stars">
+          <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+        </div>
+        <p class="review-text" data-i18n="rev-3">¡Excelente servicio! Somos italianos y tuvimos un problema con la pantalla LCD del iPhone. ¡Lo arreglaron en solo una hora! Son increíbles.</p>
+        <div class="review-author">
+          <div class="review-avatar">TI</div>
+          <div>
+            <div class="review-name" data-i18n="rev-3-name">Turista italiano</div>
+            <div class="review-source">Google · 2025</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="reviews-footer">
+      <a href="https://www.google.com/maps/place/Romana+Compuservice" target="_blank" rel="noopener" class="btn btn-ghost">
+        <span data-i18n="rev-more">Ver todas las reseñas en Google</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACTO -->
+<section id="contacto" class="contact">
+  <div class="container">
+    <div class="contact-grid">
+      <div>
+        <div class="section-eyebrow" data-i18n="cont-eyebrow">// 04 — Visítanos</div>
+        <h2 class="section-title">
+          <span data-i18n="cont-title-1">Estamos en</span> <em data-i18n="cont-title-2">La Romana.</em>
+        </h2>
+
+        <ul class="contact-info-list">
+          <li>
+            <div class="contact-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </div>
+            <div>
+              <div class="label" data-i18n="cont-addr-label">Dirección</div>
+              <a href="https://maps.google.com/?q=Calle+Dr.+Teofilo+Ferry+34,+La+Romana" target="_blank" rel="noopener" class="value">Calle Dr. Teofilo Ferry 34<br>La Romana 22000, RD</a>
+            </div>
+          </li>
+          <li>
+            <div class="contact-icon">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 6.32A7.85 7.85 0 0012.05 4a7.94 7.94 0 00-6.88 11.91L4 20l4.2-1.1a7.93 7.93 0 003.85.98h.01a7.93 7.93 0 007.92-7.93 7.86 7.86 0 00-2.38-5.63z"/></svg>
+            </div>
+            <div>
+              <div class="label">WhatsApp / Teléfono</div>
+              <a href="https://wa.me/18297538736" class="value">+1 (829) 753-8736</a>
+            </div>
+          </li>
+          <li>
+            <div class="contact-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            </div>
+            <div>
+              <div class="label">Email</div>
+              <a href="mailto:romanacompuservice@gmail.com" class="value">romanacompuservice@gmail.com</a>
+            </div>
+          </li>
+          <li>
+            <div class="contact-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div style="flex: 1">
+              <div class="label" data-i18n="cont-hours-label">Horario</div>
+              <ul class="hours-list">
+                <li><span data-i18n="day-mon">Lunes</span><span>8:30 – 18:30</span></li>
+                <li><span data-i18n="day-tue">Martes</span><span>8:30 – 18:30</span></li>
+                <li><span data-i18n="day-wed">Miércoles</span><span>8:30 – 18:30</span></li>
+                <li><span data-i18n="day-thu">Jueves</span><span>8:30 – 18:30</span></li>
+                <li><span data-i18n="day-fri">Viernes</span><span>8:30 – 18:30</span></li>
+                <li><span data-i18n="day-sat">Sábado</span><span>8:30 – 18:30</span></li>
+                <li class="closed"><span data-i18n="day-sun">Domingo</span><span data-i18n="closed">Cerrado</span></li>
+              </ul>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="map-wrap">
+        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3779.6!2d-68.9675133!3d18.4321035!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8eaf55db62ea5215%3A0x929e8101fad0fb9e!2sRomana%20Compuservice!5e0!3m2!1ses!2sdo!4v1700000000" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
 <footer>
   <div class="footer-grid">
     <div class="footer-brand">
@@ -166,15 +323,15 @@
         
         <div class="logo-text">Romana<br><small>COMPUSERVICE & REPAIR</small></div>
       </a>
-      <p data-i18n="foot-about">Especialistas en venta y reparación de equipos informáticos en La Romana, República Dominicana.</p>
+      <p data-i18n="foot-about">Especialistas en venta y reparación de equipos informáticos en La Romana, República Dominicana. Confianza desde hace más de 10 años.</p>
     </div>
     <div class="footer-col">
       <h5 data-i18n="foot-explore">Explorar</h5>
       <ul>
         <li><a href="catalogo.html" data-i18n="foot-prod">Catálogo</a></li>
-        <li><a href="index.html#servicios" data-i18n="foot-serv">Servicios</a></li>
-        <li><a href="index.html#resenas" data-i18n="foot-rev">Reseñas</a></li>
-        <li><a href="index.html#contacto" data-i18n="foot-cont">Contacto</a></li>
+        <li><a href="#servicios" data-i18n="foot-serv">Servicios</a></li>
+        <li><a href="#resenas" data-i18n="foot-rev">Reseñas</a></li>
+        <li><a href="#contacto" data-i18n="foot-cont">Contacto</a></li>
       </ul>
     </div>
     <div class="footer-col">
@@ -188,8 +345,12 @@
     <div class="footer-col">
       <h5 data-i18n="foot-social">Síguenos</h5>
       <div class="social-links">
-        <a href="https://www.instagram.com/romanacompuservice/" target="_blank" rel="noopener" class="social-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
-        <a href="https://www.facebook.com/Romanacompuservicerd" target="_blank" rel="noopener" class="social-link"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z"/></svg></a>
+        <a href="https://www.instagram.com/romanacompuservice/" target="_blank" rel="noopener" class="social-link" aria-label="Instagram">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+        </a>
+        <a href="https://www.facebook.com/Romanacompuservicerd" target="_blank" rel="noopener" class="social-link" aria-label="Facebook">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z"/></svg>
+        </a>
       </div>
     </div>
   </div>
@@ -214,14 +375,14 @@
   </div>
 </div>
 
-<a href="https://wa.me/18297538736" target="_blank" rel="noopener" class="whatsapp-float">
-  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 6.32A7.85 7.85 0 0012.05 4a7.94 7.94 0 00-6.88 11.91L4 20l4.2-1.1a7.93 7.93 0 003.85.98h.01a7.93 7.93 0 007.92-7.93 7.86 7.86 0 00-2.38-5.63zM12.05 18.55a6.59 6.59 0 01-3.36-.92l-.24-.14-2.49.65.66-2.43-.16-.25a6.6 6.6 0 0110.21-8.16 6.55 6.55 0 011.93 4.66 6.6 6.6 0 01-6.55 6.59z"/></svg>
+<a href="https://wa.me/18297538736" target="_blank" rel="noopener" class="whatsapp-float" aria-label="WhatsApp">
+  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 6.32A7.85 7.85 0 0012.05 4a7.94 7.94 0 00-6.88 11.91L4 20l4.2-1.1a7.93 7.93 0 003.85.98h.01a7.93 7.93 0 007.92-7.93 7.86 7.86 0 00-2.38-5.63zM12.05 18.55a6.59 6.59 0 01-3.36-.92l-.24-.14-2.49.65.66-2.43-.16-.25a6.6 6.6 0 0110.21-8.16 6.55 6.55 0 011.93 4.66 6.6 6.6 0 01-6.55 6.59zm3.61-4.94c-.2-.1-1.17-.58-1.36-.64-.18-.07-.31-.1-.45.1-.13.2-.5.64-.61.77-.11.13-.23.15-.43.05-.2-.1-.83-.31-1.59-.98-.59-.52-.99-1.17-1.1-1.37-.12-.2-.01-.31.09-.41.09-.09.2-.23.3-.35.1-.12.13-.2.2-.33.07-.13.03-.25-.02-.35-.05-.1-.45-1.08-.62-1.48-.16-.39-.33-.34-.45-.34h-.39a.74.74 0 00-.54.25 2.26 2.26 0 00-.7 1.68c0 .99.72 1.95.82 2.08.1.13 1.41 2.16 3.42 3.03.48.2.85.33 1.14.43.48.15.91.13 1.26.08.38-.06 1.17-.48 1.34-.94.16-.46.16-.86.11-.94-.05-.08-.18-.13-.38-.23z"/></svg>
 </a>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/supabase.js"></script>
 <script src="assets/translations.js"></script>
 <script src="assets/main.js"></script>
-<script src="assets/catalog.js"></script>
+<script src="assets/home.js"></script>
 </body>
 </html>

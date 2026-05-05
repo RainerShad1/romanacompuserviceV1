@@ -3,95 +3,115 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Acceso Admin · RCRC Compuservice</title>
-<meta name="robots" content="noindex, nofollow">
+<title>Producto · RCRC Compuservice</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Archivo:wght@400;500;600;800;900&family=Archivo+Black&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/styles.css">
-<link rel="stylesheet" href="assets/admin.css">
 </head>
-<body class="auth-body">
+<body>
 
-<div class="auth-container">
-  <div class="auth-card">
-    <a href="index.html" class="auth-logo">
+<header>
+  <div class="header-inner">
+    <a href="index.html" class="logo">
       <img src="assets/logo.png" alt="RCRC" class="logo-img" onerror="this.onerror=null; this.src='assets/logo-fallback.svg';">
+      
       <div class="logo-text">Romana<br><small>COMPUSERVICE</small></div>
     </a>
 
-    <div class="auth-header">
-      <div class="auth-eyebrow">// PANEL ADMIN</div>
-      <h1 class="auth-title">Iniciar <em>sesión</em></h1>
-      <p class="auth-subtitle">Acceso restringido al equipo administrativo.</p>
-    </div>
+    <nav id="mainNav">
+      <ul>
+        <li><a href="catalogo.html" data-i18n="nav-products">Productos</a></li>
+        <li><a href="index.html#servicios" data-i18n="nav-services">Servicios</a></li>
+        <li><a href="index.html#resenas" data-i18n="nav-reviews">Reseñas</a></li>
+        <li><a href="index.html#contacto" data-i18n="nav-contact">Contacto</a></li>
+      </ul>
+    </nav>
 
-    <form id="loginForm" class="auth-form">
-      <div class="form-group">
-        <label for="email">Email</label>
-        <input type="email" id="email" name="email" required autocomplete="username" placeholder="tu@email.com">
+    <div class="header-actions">
+      <div class="lang-switch">
+        <span class="lang-switch-icon" title="Idioma / Language / Lingua"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>
+        <button class="active" data-lang="es">ES</button>
+        <button data-lang="en">EN</button>
+        <button data-lang="it">IT</button>
       </div>
-
-      <div class="form-group">
-        <label for="password">Contraseña</label>
-        <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="••••••••">
-      </div>
-
-      <div id="errorMessage" class="auth-error" style="display: none;"></div>
-
-      <button type="submit" id="submitBtn" class="btn btn-primary auth-submit">
-        <span id="btnText">Entrar</span>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      <button class="menu-toggle" id="menuToggle" aria-label="Menú">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
-    </form>
+    </div>
+  </div>
+</header>
 
-    <a href="index.html" class="auth-back">← Volver al sitio</a>
+<div class="product-page">
+  <div id="productContent">
+    <!-- Generado por JS -->
   </div>
 </div>
 
-<!-- Supabase JS desde CDN -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="index.html" class="logo">
+        <img src="assets/logo.png" alt="RCRC" class="logo-img" onerror="this.onerror=null; this.src='assets/logo-fallback.svg';">
+        
+        <div class="logo-text">Romana<br><small>COMPUSERVICE & REPAIR</small></div>
+      </a>
+      <p data-i18n="foot-about">Especialistas en venta y reparación de equipos informáticos en La Romana, República Dominicana.</p>
+    </div>
+    <div class="footer-col">
+      <h5 data-i18n="foot-explore">Explorar</h5>
+      <ul>
+        <li><a href="catalogo.html" data-i18n="foot-prod">Catálogo</a></li>
+        <li><a href="index.html#servicios" data-i18n="foot-serv">Servicios</a></li>
+        <li><a href="index.html#resenas" data-i18n="foot-rev">Reseñas</a></li>
+        <li><a href="index.html#contacto" data-i18n="foot-cont">Contacto</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h5 data-i18n="foot-contact">Contacto</h5>
+      <ul>
+        <li><a href="https://wa.me/18297538736">WhatsApp</a></li>
+        <li><a href="tel:+18297538736">+1 (829) 753-8736</a></li>
+        <li><a href="mailto:romanacompuservice@gmail.com">Email</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h5 data-i18n="foot-social">Síguenos</h5>
+      <div class="social-links">
+        <a href="https://www.instagram.com/romanacompuservice/" target="_blank" rel="noopener" class="social-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+        <a href="https://www.facebook.com/Romanacompuservicerd" target="_blank" rel="noopener" class="social-link"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z"/></svg></a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div>© 2026 RCRC Compuservice & Repair Center SRL · RD</div>
+    <div data-i18n="foot-rights">Todos los derechos reservados</div>
+  </div>
+</footer>
+
+<!-- Popup de WhatsApp -->
+<div class="whatsapp-popup" id="whatsappPopup" role="dialog" aria-live="polite">
+  <button class="whatsapp-popup-close" id="whatsappPopupClose" aria-label="Cerrar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  </button>
+  <div class="whatsapp-popup-avatar">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 6.32A7.85 7.85 0 0012.05 4a7.94 7.94 0 00-6.88 11.91L4 20l4.2-1.1a7.93 7.93 0 003.85.98h.01a7.93 7.93 0 007.92-7.93 7.86 7.86 0 00-2.38-5.63z"/></svg>
+  </div>
+  <div class="whatsapp-popup-content">
+    <div class="whatsapp-popup-title" data-i18n="wa-popup-title">¿Necesitas ayuda?</div>
+    <p class="whatsapp-popup-message" data-i18n="wa-popup-msg">Estamos en línea. Contáctanos por WhatsApp y te respondemos al instante.</p>
+    <a href="https://wa.me/18297538736" target="_blank" rel="noopener" class="whatsapp-popup-cta" data-i18n="wa-popup-cta">Chatear ahora</a>
+  </div>
+</div>
+
+<a href="https://wa.me/18297538736" target="_blank" rel="noopener" class="whatsapp-float">
+  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 6.32A7.85 7.85 0 0012.05 4a7.94 7.94 0 00-6.88 11.91L4 20l4.2-1.1a7.93 7.93 0 003.85.98h.01a7.93 7.93 0 007.92-7.93 7.86 7.86 0 00-2.38-5.63z"/></svg>
+</a>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/supabase.js"></script>
-<script>
-(async function() {
-  // Si ya está logueado, redirigir al admin
-  const user = await getCurrentUser();
-  if (user) {
-    window.location.href = 'admin.html';
-  }
-})();
-
-const form = document.getElementById('loginForm');
-const errorMsg = document.getElementById('errorMessage');
-const submitBtn = document.getElementById('submitBtn');
-const btnText = document.getElementById('btnText');
-
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  errorMsg.style.display = 'none';
-  submitBtn.disabled = true;
-  btnText.textContent = 'Entrando...';
-
-  const email = document.getElementById('email').value.trim();
-  const password = document.getElementById('password').value;
-
-  try {
-    await signIn(email, password);
-    window.location.href = 'admin.html';
-  } catch (error) {
-    errorMsg.textContent = traducirError(error.message);
-    errorMsg.style.display = 'block';
-    submitBtn.disabled = false;
-    btnText.textContent = 'Entrar';
-  }
-});
-
-function traducirError(msg) {
-  if (msg.includes('Invalid login')) return 'Email o contraseña incorrectos.';
-  if (msg.includes('Email not confirmed')) return 'Email no confirmado. Contacta al administrador.';
-  if (msg.includes('rate limit')) return 'Demasiados intentos. Espera un minuto.';
-  return 'Error: ' + msg;
-}
-</script>
+<script src="assets/translations.js"></script>
+<script src="assets/main.js"></script>
+<script src="assets/product.js"></script>
 </body>
 </html>

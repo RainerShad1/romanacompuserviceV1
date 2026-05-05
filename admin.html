@@ -1,248 +1,327 @@
-// ================================================
-// RCRC COMPUSERVICE - LÓGICA DEL CATÁLOGO
-// Búsqueda, filtros y ordenamiento (con Supabase)
-// ================================================
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin · Romana Compuservice</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Archivo:wght@400;500;600;800;900&family=Archivo+Black&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css">
+<link rel="stylesheet" href="assets/admin.css">
+</head>
+<body class="admin-body">
 
-(async function() {
-  const grid = document.getElementById('productsGrid');
-  const noResults = document.getElementById('noResults');
-  const resultsCount = document.getElementById('resultsCount');
-  const totalCount = document.getElementById('totalCount');
-  const searchInput = document.getElementById('searchInput');
-  const sortSelect = document.getElementById('sortSelect');
-  const priceMinInput = document.getElementById('priceMin');
-  const priceMaxInput = document.getElementById('priceMax');
-  const clearBtn = document.getElementById('clearFilters');
-  const filtersToggle = document.getElementById('filtersToggle');
-  const filtersSidebar = document.getElementById('filtersSidebar');
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" class="login-screen">
+  <div class="login-card">
+    <a href="index.html" class="logo" style="margin-bottom: 32px;">
+      <img src="assets/logo.png" alt="Romana" class="logo-img" onerror="this.onerror=null; this.src='assets/logo-fallback.svg';">
+      <div class="logo-text">Romana<br><small>ADMIN PANEL</small></div>
+    </a>
 
-  // Mostrar estado de carga
-  grid.innerHTML = '<div style="grid-column: 1/-1; padding: 60px; display: flex; justify-content: center;"><div style="width: 32px; height: 32px; border: 3px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite;"></div></div>';
+    <h1 class="login-title">Iniciar sesión</h1>
+    <p class="login-subtitle">Acceso restringido. Solo personal autorizado.</p>
 
-  // Cargar productos desde Supabase
-  let products = [];
-  try {
-    products = await fetchProducts();
-  } catch (e) {
-    console.error('Error cargando productos:', e);
-    grid.innerHTML = '<div style="grid-column: 1/-1; padding: 60px; text-align: center; color: var(--fg-3);"><p>Error al cargar productos. Recarga la página.</p></div>';
-    return;
-  }
+    <form id="loginForm" class="login-form">
+      <div class="form-group">
+        <label for="loginEmail">Email</label>
+        <input type="email" id="loginEmail" required autocomplete="email" placeholder="tu@email.com">
+      </div>
+      <div class="form-group">
+        <label for="loginPassword">Contraseña</label>
+        <input type="password" id="loginPassword" required autocomplete="current-password" placeholder="••••••••">
+      </div>
+      <div id="loginError" class="login-error" style="display: none;"></div>
+      <button type="submit" class="btn btn-primary btn-full" id="loginBtn">
+        <span>Entrar al panel</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>
+    </form>
 
-  const state = {
-    search: '',
-    categories: [],
-    brands: [],
-    conditions: [],
-    availability: [true],
-    priceMin: null,
-    priceMax: null,
-    sort: 'relevance',
-  };
+    <a href="index.html" class="login-back">← Volver al sitio</a>
+  </div>
+</div>
 
-  function buildDynamicFilters() {
-    const categories = {};
-    const brands = {};
+<!-- ADMIN DASHBOARD (oculto hasta login) -->
+<div id="adminApp" class="admin-app" style="display: none;">
 
-    products.forEach(p => {
-      categories[p.category] = (categories[p.category] || 0) + 1;
-      brands[p.brand] = (brands[p.brand] || 0) + 1;
-    });
+  <!-- Top bar -->
+  <header class="admin-header">
+    <a href="index.html" class="logo">
+      <img src="assets/logo.png" alt="Romana" class="logo-img" onerror="this.onerror=null; this.src='assets/logo-fallback.svg';">
+      <div class="logo-text">Romana<br><small>ADMIN</small></div>
+    </a>
 
-    const categoryLabels = {
-      laptops: 'Laptops',
-      desktops: 'Computadoras',
-      components: 'Componentes',
-      monitors: 'Monitores',
-      accessories: 'Accesorios',
-      printers: 'Impresoras',
-    };
-
-    const catContainer = document.getElementById('filterCategory');
-    if (Object.keys(categories).length === 0) {
-      catContainer.innerHTML = '<p style="color: var(--fg-3); font-size: 12px; padding: 8px;">Sin categorías</p>';
-    } else {
-      catContainer.innerHTML = Object.entries(categories).map(([cat, count]) => `
-        <label class="filter-option">
-          <input type="checkbox" value="${cat}" data-filter="category">
-          <span>${categoryLabels[cat] || cat}</span>
-          <span class="filter-count">${count}</span>
-        </label>
-      `).join('');
-    }
-
-    const brandContainer = document.getElementById('filterBrand');
-    if (Object.keys(brands).length === 0) {
-      brandContainer.innerHTML = '<p style="color: var(--fg-3); font-size: 12px; padding: 8px;">Sin marcas</p>';
-    } else {
-      brandContainer.innerHTML = Object.entries(brands).map(([brand, count]) => `
-        <label class="filter-option">
-          <input type="checkbox" value="${brand}" data-filter="brand">
-          <span>${brand}</span>
-          <span class="filter-count">${count}</span>
-        </label>
-      `).join('');
-    }
-
-    document.querySelectorAll('input[data-filter]').forEach(input => {
-      input.addEventListener('change', handleFilterChange);
-    });
-  }
-
-  function getFilteredProducts() {
-    let filtered = [...products];
-
-    if (state.search) {
-      const term = state.search.toLowerCase();
-      filtered = filtered.filter(p =>
-        p.name.toLowerCase().includes(term) ||
-        p.brand.toLowerCase().includes(term) ||
-        p.description.toLowerCase().includes(term)
-      );
-    }
-
-    if (state.categories.length > 0) {
-      filtered = filtered.filter(p => state.categories.includes(p.category));
-    }
-
-    if (state.brands.length > 0) {
-      filtered = filtered.filter(p => state.brands.includes(p.brand));
-    }
-
-    if (state.conditions.length > 0) {
-      filtered = filtered.filter(p => state.conditions.includes(p.condition));
-    }
-
-    if (state.availability.length > 0) {
-      filtered = filtered.filter(p => state.availability.includes(p.available));
-    }
-
-    if (state.priceMin !== null) {
-      filtered = filtered.filter(p => p.price >= state.priceMin);
-    }
-    if (state.priceMax !== null) {
-      filtered = filtered.filter(p => p.price <= state.priceMax);
-    }
-
-    switch (state.sort) {
-      case 'price-asc':
-        filtered.sort((a, b) => (a.price || 0) - (b.price || 0));
-        break;
-      case 'price-desc':
-        filtered.sort((a, b) => (b.price || 0) - (a.price || 0));
-        break;
-      case 'name':
-        filtered.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      case 'newest':
-        filtered.sort((a, b) => new Date(b.addedDate) - new Date(a.addedDate));
-        break;
-      default:
-        filtered.sort((a, b) => {
-          if (a.isPending !== b.isPending) return a.isPending ? 1 : -1;
-          if (a.available !== b.available) return a.available ? -1 : 1;
-          return 0;
-        });
-    }
-
-    return filtered;
-  }
-
-  function escapeHtml(str) {
-    if (str === null || str === undefined) return '';
-    return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  }
-
-  function renderProductCard(product) {
-    const isPending = product.isPending;
-    const badgeClass = isPending ? 'badge-pending' : (product.condition === 'new' ? 'badge-new' : 'badge-used');
-    const badgeKey = isPending ? 'badge-pending' : (product.condition === 'new' ? 'badge-new' : 'badge-used');
-    const badgeText = t(badgeKey);
-
-    const availLabel = product.available ? t('cat-avail-yes') : t('cat-avail-no');
-    const availClass = product.available ? 'available' : 'out-of-stock';
-
-    const priceText = isPending
-      ? `<span style="color: var(--fg-3); font-size: 14px;">RD$ —<small style="display:block; color: var(--fg-3);">${t('pending')}</small></span>`
-      : `${formatPrice(product.price)}<small>${product.condition === 'new' ? t('price-include') : t('price-include-2')}</small>`;
-
-    const imageContent = product.imageUrl
-      ? `<img src="${escapeHtml(product.imageUrl)}" alt="${escapeHtml(product.name)}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;">`
-      : (productIcons[product.iconType] || productIcons.laptop);
-
-    const linkHref = isPending ? '#' : `producto.html?id=${encodeURIComponent(product.id)}`;
-    const onClickStyle = isPending ? 'pointer-events: none; opacity: 0.6;' : '';
-
-    return `
-      <a href="${linkHref}" class="product-card" style="${onClickStyle}">
-        <div class="product-image-wrap">
-          <span class="product-badge ${badgeClass}">${badgeText}</span>
-          ${!isPending ? `<span class="product-availability ${availClass}"><span class="dot"></span><span>${availLabel}</span></span>` : ''}
-          ${imageContent}
-        </div>
-        <div class="product-meta">${escapeHtml(product.brand.toUpperCase())} · ${escapeHtml(product.categoryLabel.toUpperCase())}</div>
-        <h3 class="product-name">${escapeHtml(product.name)}</h3>
-        <p class="product-desc">${escapeHtml(product.description)}</p>
-        <div class="product-footer">
-          <div class="product-price">${priceText}</div>
-          <span class="product-cta">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-          </span>
-        </div>
+    <div class="admin-header-actions">
+      <a href="index.html" target="_blank" class="btn btn-ghost btn-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        <span>Ver sitio</span>
       </a>
-    `;
-  }
+      <button id="logoutBtn" class="btn btn-ghost btn-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span>Salir</span>
+      </button>
+    </div>
+  </header>
 
-  function render() {
-    const filtered = getFilteredProducts();
-    totalCount.textContent = products.length;
-    resultsCount.textContent = filtered.length;
+  <!-- Tabs -->
+  <div class="admin-tabs">
+    <button class="admin-tab active" data-tab="products">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+      <span>Productos</span>
+      <span class="tab-count" id="productsCount">0</span>
+    </button>
+    <button class="admin-tab" data-tab="services">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+      <span>Servicios</span>
+      <span class="tab-count" id="servicesCount">0</span>
+    </button>
+  </div>
 
-    if (filtered.length === 0) {
-      grid.style.display = 'none';
-      noResults.style.display = 'block';
-    } else {
-      grid.style.display = 'grid';
-      noResults.style.display = 'none';
-      grid.innerHTML = filtered.map(renderProductCard).join('');
-    }
-  }
+  <!-- TAB CONTENT: PRODUCTS -->
+  <section id="productsTab" class="admin-tab-content active">
+    <div class="admin-toolbar">
+      <h2>Gestionar productos</h2>
+      <button class="btn btn-primary" id="addProductBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span>Agregar producto</span>
+      </button>
+    </div>
 
-  function handleFilterChange() {
-    state.categories = Array.from(document.querySelectorAll('input[data-filter="category"]:checked')).map(i => i.value);
-    state.brands = Array.from(document.querySelectorAll('input[data-filter="brand"]:checked')).map(i => i.value);
-    state.conditions = Array.from(document.querySelectorAll('input[data-filter="condition"]:checked')).map(i => i.value);
-    state.availability = Array.from(document.querySelectorAll('input[data-filter="availability"]:checked')).map(i => i.value === 'true');
-    render();
-  }
+    <div id="productsLoading" class="loading-state">Cargando productos...</div>
+    <div id="productsList" class="admin-list" style="display: none;"></div>
+    <div id="productsEmpty" class="empty-state" style="display: none;">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+      <h3>No hay productos todavía</h3>
+      <p>Agrega tu primer producto para que aparezca en el catálogo.</p>
+    </div>
+  </section>
 
-  searchInput.addEventListener('input', e => { state.search = e.target.value; render(); });
-  sortSelect.addEventListener('change', e => { state.sort = e.target.value; render(); });
-  priceMinInput.addEventListener('input', e => { state.priceMin = e.target.value ? parseFloat(e.target.value) : null; render(); });
-  priceMaxInput.addEventListener('input', e => { state.priceMax = e.target.value ? parseFloat(e.target.value) : null; render(); });
+  <!-- TAB CONTENT: SERVICES -->
+  <section id="servicesTab" class="admin-tab-content">
+    <div class="admin-toolbar">
+      <h2>Gestionar servicios</h2>
+      <button class="btn btn-primary" id="addServiceBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span>Agregar servicio</span>
+      </button>
+    </div>
 
-  clearBtn.addEventListener('click', () => {
-    document.querySelectorAll('input[data-filter]').forEach(i => {
-      i.checked = (i.dataset.filter === 'availability' && i.value === 'true');
-    });
-    searchInput.value = '';
-    priceMinInput.value = '';
-    priceMaxInput.value = '';
-    sortSelect.value = 'relevance';
-    Object.assign(state, {
-      search: '', categories: [], brands: [], conditions: [],
-      availability: [true], priceMin: null, priceMax: null, sort: 'relevance',
-    });
-    render();
-  });
+    <div id="servicesLoading" class="loading-state">Cargando servicios...</div>
+    <div id="servicesList" class="admin-list" style="display: none;"></div>
+    <div id="servicesEmpty" class="empty-state" style="display: none;">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+      <h3>No hay servicios todavía</h3>
+      <p>Agrega tu primer servicio.</p>
+    </div>
+  </section>
+</div>
 
-  if (filtersToggle) {
-    filtersToggle.addEventListener('click', () => filtersSidebar.classList.toggle('open'));
-  }
+<!-- MODAL: PRODUCT FORM -->
+<div id="productModal" class="modal" role="dialog" aria-modal="true" style="display: none;">
+  <div class="modal-backdrop" data-close-modal></div>
+  <div class="modal-content">
+    <header class="modal-header">
+      <h3 id="productModalTitle">Agregar producto</h3>
+      <button class="modal-close" data-close-modal aria-label="Cerrar">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </header>
 
-  document.addEventListener('langChanged', render);
+    <form id="productForm" class="admin-form">
+      <input type="hidden" id="productEditingId">
 
-  buildDynamicFilters();
-  setTimeout(() => setLang(getCurrentLang()), 50);
-  render();
-})();
+      <!-- Foto del producto -->
+      <div class="form-group">
+        <label>Foto del producto</label>
+        <div class="image-upload-wrap">
+          <div class="image-preview" id="imagePreview">
+            <span class="image-preview-placeholder">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <span>Sin foto</span>
+            </span>
+          </div>
+          <div class="image-upload-actions">
+            <input type="file" id="productImage" accept="image/*" style="display: none;">
+            <button type="button" class="btn btn-ghost btn-sm" id="uploadImageBtn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <span>Subir foto</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm btn-danger" id="removeImageBtn" style="display: none;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              <span>Quitar</span>
+            </button>
+            <p class="form-help">Máx 5 MB. JPG, PNG o WebP. Si no subes foto, se mostrará un ícono.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="productName">Nombre <span class="required">*</span></label>
+          <input type="text" id="productName" required placeholder="Laptop HP 250 G9">
+        </div>
+        <div class="form-group">
+          <label for="productSku">Código (SKU)</label>
+          <input type="text" id="productSku" placeholder="HP-250-001">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="productBrand">Marca <span class="required">*</span></label>
+          <input type="text" id="productBrand" required list="brandsList" placeholder="HP">
+          <datalist id="brandsList">
+            <option value="HP">
+            <option value="Dell">
+            <option value="Lenovo">
+            <option value="Kingston">
+            <option value="Asus">
+            <option value="Acer">
+            <option value="Apple">
+            <option value="Logitech">
+            <option value="Genius">
+          </datalist>
+        </div>
+        <div class="form-group">
+          <label for="productCategory">Categoría <span class="required">*</span></label>
+          <select id="productCategory" required>
+            <option value="">Elige una...</option>
+            <option value="laptops" data-label="Laptops">Laptops</option>
+            <option value="desktops" data-label="Computadoras">Computadoras</option>
+            <option value="components" data-label="Componentes">Componentes</option>
+            <option value="monitors" data-label="Monitores">Monitores</option>
+            <option value="accessories" data-label="Accesorios">Accesorios</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="productCondition">Condición <span class="required">*</span></label>
+          <select id="productCondition" required>
+            <option value="new">Nuevo</option>
+            <option value="used">Usado</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="productPrice">Precio (RD$) <span class="required">*</span></label>
+          <input type="number" id="productPrice" required min="0" step="50" placeholder="0">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="productWarranty">Garantía</label>
+          <input type="text" id="productWarranty" placeholder="6 meses, 30 días, etc.">
+        </div>
+        <div class="form-group">
+          <label for="productIconType">Ícono (si no hay foto)</label>
+          <select id="productIconType">
+            <option value="laptop">Laptop</option>
+            <option value="desktop">Desktop / Computadora</option>
+            <option value="ssd">SSD / Disco</option>
+            <option value="monitor">Monitor</option>
+            <option value="charger">Cargador / Cable</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="productDescription">Descripción corta <span class="required">*</span></label>
+        <textarea id="productDescription" required rows="2" placeholder="Una línea o dos. Aparece en las tarjetas del catálogo."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="productLongDescription">Descripción larga</label>
+        <textarea id="productLongDescription" rows="4" placeholder="Aparece en la página de detalle del producto. Especificaciones, condición real, etc."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="productAvailable" checked>
+          <span>Disponible en stock</span>
+        </label>
+      </div>
+
+      <div id="productFormError" class="login-error" style="display: none;"></div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" data-close-modal>Cancelar</button>
+        <button type="submit" class="btn btn-primary" id="saveProductBtn">
+          <span>Guardar producto</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: SERVICE FORM -->
+<div id="serviceModal" class="modal" role="dialog" aria-modal="true" style="display: none;">
+  <div class="modal-backdrop" data-close-modal></div>
+  <div class="modal-content modal-content-sm">
+    <header class="modal-header">
+      <h3 id="serviceModalTitle">Agregar servicio</h3>
+      <button class="modal-close" data-close-modal aria-label="Cerrar">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </header>
+
+    <form id="serviceForm" class="admin-form">
+      <input type="hidden" id="serviceEditingId">
+
+      <div class="form-group">
+        <label for="serviceTitle">Nombre del servicio <span class="required">*</span></label>
+        <input type="text" id="serviceTitle" required placeholder="Cambio de pantalla">
+      </div>
+
+      <div class="form-group">
+        <label for="serviceDescription">Descripción <span class="required">*</span></label>
+        <textarea id="serviceDescription" required rows="3" placeholder="Reparación de pantallas dañadas en laptops..."></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="serviceOrder">Orden de aparición</label>
+          <input type="number" id="serviceOrder" min="0" step="1" value="0" placeholder="1, 2, 3...">
+          <p class="form-help">Menor = aparece primero</p>
+        </div>
+        <div class="form-group">
+          <label class="checkbox-label" style="margin-top: 28px;">
+            <input type="checkbox" id="serviceActive" checked>
+            <span>Activo (visible en el sitio)</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="serviceWhatsapp">Mensaje pre-armado de WhatsApp</label>
+        <input type="text" id="serviceWhatsapp" placeholder="Hola, quiero cotizar cambio de pantalla">
+        <p class="form-help">Mensaje que se manda al hacer clic en "Cotizar"</p>
+      </div>
+
+      <div id="serviceFormError" class="login-error" style="display: none;"></div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" data-close-modal>Cancelar</button>
+        <button type="submit" class="btn btn-primary" id="saveServiceBtn">
+          <span>Guardar servicio</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast" style="display: none;">
+  <span id="toastMessage"></span>
+</div>
+
+<!-- Supabase JS desde CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/supabase.js"></script>
+<script src="assets/admin.js"></script>
+</body>
+</html>
